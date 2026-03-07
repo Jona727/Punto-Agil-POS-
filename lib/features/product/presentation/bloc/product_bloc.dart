@@ -12,17 +12,20 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   final AddProductUseCase addProductUseCase;
   final UpdateProductUseCase updateProductUseCase;
   final DeleteProductUseCase deleteProductUseCase;
+  final UpdatePricesMassivelyUseCase updatePricesMassivelyUseCase;
 
   ProductBloc({
     required this.getProductsUseCase,
     required this.addProductUseCase,
     required this.updateProductUseCase,
     required this.deleteProductUseCase,
+    required this.updatePricesMassivelyUseCase,
   }) : super(const ProductState()) {
     on<LoadProducts>(_onLoadProducts);
     on<AddProduct>(_onAddProduct);
     on<UpdateProduct>(_onUpdateProduct);
     on<DeleteProduct>(_onDeleteProduct);
+    on<UpdatePricesMassively>(_onUpdatePricesMassively);
   }
 
   Future<void> _onLoadProducts(
@@ -80,6 +83,22 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         emit(state.copyWith(
             status: ProductStatus.success,
             message: 'Product deleted successfully'));
+        add(LoadProducts());
+      },
+    );
+  }
+
+  Future<void> _onUpdatePricesMassively(
+      UpdatePricesMassively event, Emitter<ProductState> emit) async {
+    emit(state.copyWith(status: ProductStatus.loading));
+    final result = await updatePricesMassivelyUseCase(event.percentage);
+    result.fold(
+      (failure) => emit(state.copyWith(
+          status: ProductStatus.error, message: failure.message)),
+      (_) {
+        emit(state.copyWith(
+            status: ProductStatus.success,
+            message: 'Massive price update applied successfully'));
         add(LoadProducts());
       },
     );

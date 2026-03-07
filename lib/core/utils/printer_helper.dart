@@ -1,6 +1,5 @@
+import 'dart:io';
 import 'package:intl/intl.dart';
-import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class EscPos {
   static const List<int> init = [0x1B, 0x40];
@@ -20,40 +19,16 @@ class PrinterHelper {
   factory PrinterHelper() => _instance;
   PrinterHelper._internal();
 
+  Socket? _socket;
   bool _isConnected = false;
-  bool get isConnected => _isConnected;
+  bool get isConnected => _isConnected && _socket != null;
 
-  Future<bool> checkPermission() async {
-    // Request Bluetooth and Location permissions
-    // Android 12+ needs BLUETOOTH_SCAN, BLUETOOTH_CONNECT
-    // Older Android needs BLUETOOTH, BLUETOOTH_ADMIN, ACCESS_FINE_LOCATION
-
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.bluetooth,
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.location,
-    ].request();
-
-    return statuses.values.every((status) => status.isGranted);
-  }
-
-  Future<List<BluetoothInfo>> getBondedDevices() async {
+  Future<bool> connect(String ipAddress) async {
     try {
-      final List<BluetoothInfo> list =
-          await PrintBluetoothThermal.pairedBluetooths;
-      return list;
-    } catch (e) {
-      return [];
-    }
-  }
-
-  Future<bool> connect(String macAddress) async {
-    try {
-      final bool result =
-          await PrintBluetoothThermal.connect(macPrinterAddress: macAddress);
-      _isConnected = result;
-      return result;
+      _socket = await Socket.connect(ipAddress, 9100,
+          timeout: const Duration(seconds: 5));
+      _isConnected = true;
+      return true;
     } catch (e) {
       _isConnected = false;
       return false;
@@ -62,44 +37,24 @@ class PrinterHelper {
 
   Future<bool> disconnect() async {
     try {
-      final bool result = await PrintBluetoothThermal.disconnect;
-      _isConnected =
-          !result; // If disconnected successfully, isConnected is false
-      return result;
+      if (_socket != null) {
+        _socket!.destroy();
+        _socket = null;
+      }
+      _isConnected = false;
+      return true;
     } catch (e) {
       return false;
     }
   }
 
   Future<void> printText(String text) async {
-    if (!_isConnected) return;
-
-    // Simple text printing
-    // We can use bytes for advanced formatting
-    // But plugin supports basic text or bytes
-
-    // Checking battery or connection status
-    final bool connectionStatus = await PrintBluetoothThermal.connectionStatus;
-    if (connectionStatus) {
-      // Plugin allows sending bytes. We need ESC/POS commands for text.
-      // However, the plugin might have helper.
-      // Looking at doc, `writeBytes` or `writeString`?
-      // The plugin `print_bluetooth_thermal` mainly exposes `writeBytes`.
-      // We need a generator. `esc_pos_utils` is common but not requested.
-      // But wait, `print_bluetooth_thermal` example often uses `capability_profile` and `generator`.
-      // I don't have `esc_pos_utils` or similar in my pubspec.
-      // The user requested `print_bluetooth_thermal`.
-      // Let's assume we can send raw string bytes or use a simple helper.
-      // Actually without `esc_pos_utils`, formatting is hard.
-      // I will try to use `esc_pos_utils_plus` or similar if I can add it, but user gave specific packages.
-      // Wait, user allowed "use required plugins".
-      // "suggest barcode scanner ... and use required plugins".
-      // So I can add `esc_pos_utils_plus`.
-
-      // For now, I'll assume simple text printing by converting string to bytes.
-      // ASCII bytes.
+    if (!isConnected) return;
+    try {
       List<int> bytes = text.codeUnits;
-      await PrintBluetoothThermal.writeBytes(bytes);
+      _socket!.add(bytes);
+    } catch (e) {
+      // Ignorar fallback
     }
   }
 
@@ -112,7 +67,7 @@ class PrinterHelper {
     required double total,
     required String footer,
   }) async {
-    if (!_isConnected) return;
+    if (!isConnected) return;
 
     // Construct ESC/POS bytes manually or using helper
     List<int> bytes = [];
@@ -191,7 +146,9 @@ class PrinterHelper {
     bytes += EscPos.lineFeed;
     bytes += EscPos.lineFeed; // Additional Feed
 
-    await PrintBluetoothThermal.writeBytes(bytes);
+    _socket!.add(bytes);
+    await _socket!.flush();
+    // TCP usually prints instantly on add/flush
   }
 
   List<int> _textToBytes(String text) {

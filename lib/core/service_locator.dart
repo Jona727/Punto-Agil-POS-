@@ -10,6 +10,10 @@ import '../../features/shop/presentation/bloc/shop_bloc.dart';
 import '../../features/settings/data/repositories/printer_repository_impl.dart';
 import '../../features/settings/domain/repositories/printer_repository.dart';
 import '../../features/settings/presentation/bloc/printer_bloc.dart';
+import '../../features/billing/data/repositories/sale_repository_impl.dart';
+import '../../features/billing/domain/repositories/sale_repository.dart';
+import '../../features/billing/domain/usecases/sale_usecases.dart';
+import '../../features/billing/presentation/bloc/billing_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -22,6 +26,7 @@ Future<void> init() async {
       addProductUseCase: sl(),
       updateProductUseCase: sl(),
       deleteProductUseCase: sl(),
+      updatePricesMassivelyUseCase: sl(),
     ),
   );
 
@@ -44,10 +49,20 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateProductUseCase(sl()));
   sl.registerLazySingleton(() => DeleteProductUseCase(sl()));
   sl.registerLazySingleton(() => GetProductByBarcodeUseCase(sl()));
+  sl.registerLazySingleton(() => UpdatePricesMassivelyUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ProductRepository>(
     () => ProductRepositoryImpl(),
+  );
+
+// Features - Billing
+  sl.registerFactory(
+    () => BillingBloc(
+      getProductByBarcodeUseCase: sl(),
+      saveSaleUseCase: sl(),
+      getDailySalesUseCase: sl(), // Add this param to the bloc instance
+    ),
   );
 
   // Features - Shop
@@ -63,5 +78,13 @@ Future<void> init() async {
   // Features - Settings / Printer
   sl.registerLazySingleton<PrinterRepository>(
     () => PrinterRepositoryImpl(),
+  );
+
+  // Features - Billing (Sales)
+  sl.registerLazySingleton(() => SaveSaleUseCase(sl()));
+  sl.registerLazySingleton(() => GetDailySalesUseCase(sl()));
+
+  sl.registerLazySingleton<SaleRepository>(
+    () => SaleRepositoryImpl(),
   );
 }

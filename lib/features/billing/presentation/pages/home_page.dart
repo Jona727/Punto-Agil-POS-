@@ -8,6 +8,7 @@ import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/cart_item.dart';
+import '../widgets/manual_catalog_sheet.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -146,6 +147,22 @@ class _HomePageState extends State<HomePage> {
                     _scannerController.stop();
                     await context.push('/settings');
                     if (_isCameraOn && mounted) _scannerController.start();
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildOverlayButton(
+                  icon: Icons.format_list_bulleted_add,
+                  color: AppTheme.primaryColor,
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => const FractionallySizedBox(
+                        heightFactor: 0.85, 
+                        child: ManualCatalogSheet(),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(height: 16),
@@ -360,7 +377,7 @@ class _HomePageState extends State<HomePage> {
                                 color: Colors.grey,
                                 letterSpacing: 1.2)),
                         Text(
-                          '₹${state.totalAmount.toStringAsFixed(2)}',
+                          '\$${state.totalAmount.toStringAsFixed(2)}',
                           style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w900,
@@ -467,12 +484,26 @@ class _HomePageState extends State<HomePage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  '₹${item.product.price.toStringAsFixed(2)}',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Colors.grey[600]),
+                InkWell(
+                  onTap: () => _showEditPriceDialog(context, item),
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '\$${item.product.price.toStringAsFixed(2)}',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Colors.grey[600]),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.edit, size: 14, color: AppTheme.primaryColor),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -529,6 +560,50 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(4.0),
         child: Icon(icon, size: 20, color: Colors.grey[600]),
       ),
+    );
+  }
+
+  void _showEditPriceDialog(BuildContext context, CartItem item) {
+    final TextEditingController priceController = TextEditingController(
+      text: item.product.price.toStringAsFixed(2),
+    );
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Price'),
+          content: TextField(
+            controller: priceController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'New Price',
+              prefixText: '\$ ',
+            ),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor),
+              onPressed: () {
+                final newPrice = double.tryParse(priceController.text.trim());
+                if (newPrice != null && newPrice >= 0) {
+                  context.read<BillingBloc>().add(
+                        UpdateItemPriceEvent(item.product.id, newPrice),
+                      );
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
     );
   }
 

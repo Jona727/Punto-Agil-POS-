@@ -66,4 +66,33 @@ class ProductRepositoryImpl implements ProductRepository {
       return Left(CacheFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> updatePricesMassively(double percentage) async {
+    try {
+      final box = HiveDatabase.productBox;
+      final products = box.values.toList();
+      
+      final Map<dynamic, ProductModel> updatedMap = {};
+      
+      for (var product in products) {
+        final newPrice = product.price * (1 + (percentage / 100));
+        
+        final updatedModel = ProductModel(
+          id: product.id,
+          name: product.name,
+          barcode: product.barcode,
+          price: newPrice,
+          stock: product.stock,
+        );
+        
+        updatedMap[product.id] = updatedModel;
+      }
+      
+      await box.putAll(updatedMap);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
 }

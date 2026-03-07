@@ -152,7 +152,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                       validator: AppValidators.required('Required'),
                     ),
                     const SizedBox(height: 15),
-                    const InputLabel(text: 'UPI ID'),
+                    const InputLabel(text: 'Alias / Link (MercadoPago)'),
                     _buildTextField(
                       controller: _upiController,
                       hint: 'dineshsowndar@oksbi',

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:app_settings/app_settings.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
+import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../bloc/printer_bloc.dart';
 import '../bloc/printer_event.dart';
 import '../bloc/printer_state.dart';
@@ -109,6 +109,28 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 _buildDivider(),
                 _buildListItem(
+                  icon: Icons.receipt_long,
+                  title: 'Print Z Report',
+                  subtitle: 'Daily summary of sales',
+                  onTap: () {
+                    final shopState = context.read<ShopBloc>().state;
+                    String shopName = 'Elite Groceries';
+                    if (shopState is ShopLoaded &&
+                        shopState.shop.name.isNotEmpty) {
+                      shopName = shopState.shop.name;
+                    }
+
+                    context
+                        .read<BillingBloc>()
+                        .add(PrintZReportEvent(shopName: shopName));
+
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Printing Z Report...'),
+                        backgroundColor: Colors.blue));
+                  },
+                ),
+                _buildDivider(),
+                _buildListItem(
                   icon: Icons.storefront,
                   title: 'Shop Details',
                   subtitle: 'Edit business info & address',
@@ -120,16 +142,16 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 24),
 
             // Hardware Section
-            _buildSectionHeader('Hardware'),
+            _buildSectionHeader('Hardware - Printer'),
             BlocConsumer<PrinterBloc, PrinterState>(
               listener: (context, state) {
-                if (state.errorMessage != null) {
+                if (state.status == PrinterStatus.error && state.errorMessage != null) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(state.errorMessage!),
                       backgroundColor: Colors.red));
                 } else if (state.status == PrinterStatus.connected) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Connected to printer'),
+                      content: Text('Connected to printer!'),
                       backgroundColor: Colors.green));
                 }
               },
@@ -138,17 +160,17 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [
                     _buildListItem(
                       icon: Icons.print,
-                      title: 'Print Device',
+                      title: 'Print Device (Wi-Fi/LAN)',
                       subtitleWidget: Row(
                         children: [
                           Text(
-                            state.connectedMac != null
-                                ? (state.connectedName ?? 'Printer connected')
+                            state.connectedIp != null
+                                ? 'IP: ${state.connectedIp}'
                                 : 'No printer connected',
                             style: TextStyle(
                                 fontSize: 12, color: Colors.grey[500]),
                           ),
-                          if (state.connectedMac != null) ...[
+                          if (state.connectedIp != null) ...[
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -171,28 +193,26 @@ class _SettingsPageState extends State<SettingsPage> {
                       trailingWidget: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (state.status == PrinterStatus.scanning ||
-                              state.status == PrinterStatus.connecting)
+                          if (state.status == PrinterStatus.connecting)
                             const SizedBox(
                                 width: 24,
                                 height: 24,
                                 child:
                                     CircularProgressIndicator(strokeWidth: 2))
-                          else
+                          else if (state.connectedIp != null)
                             IconButton(
-                              icon: const Icon(Icons.refresh),
+                              icon: const Icon(Icons.link_off),
                               onPressed: () => context
                                   .read<PrinterBloc>()
-                                  .add(RefreshPrinterEvent()),
-                              color: AppTheme.primaryColor,
+                                  .add(DisconnectPrinterEvent()),
+                              color: Colors.red,
                             ),
                           IconButton(
-                            icon: const Icon(Icons.settings),
+                            icon: const Icon(Icons.add_link),
                             onPressed: () {
-                              AppSettings.openAppSettings(
-                                  type: AppSettingsType.bluetooth);
+                              _showConnectIpDialog(context);
                             },
-                            color: Colors.grey,
+                            color: AppTheme.primaryColor,
                           ),
                         ],
                       ),
@@ -205,7 +225,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               child: Text(
-                "To connect a new device, tap on the Settings gear to pair in phone's Bluetooth settings, then return and hit Refresh.",
+                "Tap the + link icon to configure your Thermal Printer using its local network IP Address (e.g., 192.168.1.50). Make sure both devices are on the same Wi-Fi.",
                 style: TextStyle(
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
@@ -217,6 +237,45 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showConnectIpDialog(BuildContext context) {
+    final TextEditingController ipController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Connect Printer'),
+          content: TextField(
+            controller: ipController,
+            decoration: const InputDecoration(
+              hintText: 'e.g. 192.168.1.100',
+              labelText: 'Printer IP Address',
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor),
+              onPressed: () {
+                final ip = ipController.text.trim();
+                if (ip.isNotEmpty) {
+                  context.read<PrinterBloc>().add(
+                      ConnectPrinterEvent(ip: ip, name: 'Network Printer'));
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Connect'),
+            ),
+          ],
+        );
+      },
     );
   }
 

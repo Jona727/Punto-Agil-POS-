@@ -14,13 +14,13 @@ class RefreshPrinterEvent extends PrinterEvent {}
 class ScanPrintersEvent extends PrinterEvent {}
 
 class ConnectPrinterEvent extends PrinterEvent {
-  final String mac;
+  final String ip;
   final String name;
 
-  const ConnectPrinterEvent({required this.mac, required this.name});
+  const ConnectPrinterEvent({required this.ip, required this.name});
 
   @override
-  List<Object?> get props => [mac, name];
+  List<Object?> get props => [ip, name];
 }
 
 class DisconnectPrinterEvent extends PrinterEvent {}

@@ -5,21 +5,31 @@ import 'package:billing_app/features/product/domain/entities/product.dart';
 import 'package:billing_app/features/product/domain/usecases/product_usecases.dart';
 import '../../../../core/utils/printer_helper.dart';
 import '../../../../core/data/hive_database.dart';
+import '../../domain/usecases/sale_usecases.dart';
+import '../../domain/entities/sale.dart';
+import 'package:uuid/uuid.dart';
 
 part 'billing_event.dart';
 part 'billing_state.dart';
 
 class BillingBloc extends Bloc<BillingEvent, BillingState> {
   final GetProductByBarcodeUseCase getProductByBarcodeUseCase;
+  final SaveSaleUseCase saveSaleUseCase;
+  final GetDailySalesUseCase getDailySalesUseCase;
 
-  BillingBloc({required this.getProductByBarcodeUseCase})
-      : super(const BillingState()) {
+  BillingBloc({
+    required this.getProductByBarcodeUseCase,
+    required this.saveSaleUseCase,
+    required this.getDailySalesUseCase,
+  }) : super(const BillingState()) {
     on<ScanBarcodeEvent>(_onScanBarcode);
     on<AddProductToCartEvent>(_onAddProductToCart);
     on<RemoveProductFromCartEvent>(_onRemoveProductFromCart);
     on<UpdateQuantityEvent>(_onUpdateQuantity);
+    on<UpdateItemPriceEvent>(_onUpdateItemPrice);
     on<ClearCartEvent>(_onClearCart);
     on<PrintReceiptEvent>(_onPrintReceipt);
+    on<PrintZReportEvent>(_onPrintZReport);
   }
 
   Future<void> _onScanBarcode(
@@ -78,6 +88,27 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     }
   }
 
+  void _onUpdateItemPrice(
+      UpdateItemPriceEvent event, Emitter<BillingState> emit) {
+    if (event.newPrice < 0) return; // Prevent negative prices
+
+    final index = state.cartItems
+        .indexWhere((item) => item.product.id == event.productId);
+    
+    if (index >= 0) {
+      final items = List<CartItem>.from(state.cartItems);
+      final item = items[index];
+      
+      // Override the internal product representation for this local sale
+      final modifiedProduct = item.product.copyWith(price: event.newPrice);
+      
+      // Swap the item back into the cart
+      items[index] = item.copyWith(product: modifiedProduct);
+      
+      emit(state.copyWith(cartItems: items));
+    }
+  }
+
   void _onClearCart(ClearCartEvent event, Emitter<BillingState> emit) {
     emit(const BillingState());
   }
@@ -127,6 +158,14 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           total: state.totalAmount,
           footer: event.footer);
 
+      // Save sale to DB when printing is successfully queued
+      final sale = Sale(
+        id: const Uuid().v4(),
+        date: DateTime.now(),
+        total: state.totalAmount,
+      );
+      await saveSaleUseCase(sale);
+
       emit(state.copyWith(isPrinting: false, printSuccess: true));
     } catch (e) {
       emit(state.copyWith(
@@ -134,5 +173,93 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
       // Reset error instantly avoids sticky error
       emit(state.copyWith(clearError: true));
     }
+  }
+
+  Future<void> _onPrintZReport(
+      PrintZReportEvent event, Emitter<BillingState> emit) async {
+    emit(state.copyWith(
+        isPrinting: true, printSuccess: false, clearError: true));
+
+    final result = await getDailySalesUseCase(DateTime.now());
+
+    await result.fold(
+      (failure) async {
+        emit(state.copyWith(
+            isPrinting: false,
+            error: 'Failed to load sales: ${failure.message}',
+            clearError: false));
+        emit(state.copyWith(clearError: true));
+      },
+      (sales) async {
+        if (sales.isEmpty) {
+          emit(state.copyWith(
+              isPrinting: false,
+              error: 'No sales recorded today to close the batch.',
+              clearError: false));
+          emit(state.copyWith(clearError: true));
+          return;
+        }
+
+        double grandTotal = 0;
+        for (var sale in sales) {
+          grandTotal += sale.total;
+        }
+
+        final printerHelper = PrinterHelper();
+        if (!printerHelper.isConnected) {
+          final savedMac = HiveDatabase.settingsBox.get('printer_mac');
+          if (savedMac != null) {
+            final connected = await printerHelper.connect(savedMac);
+            if (!connected) {
+              emit(state.copyWith(
+                  error: 'Failed to auto-connect to printer!',
+                  clearError: false));
+              emit(state.copyWith(clearError: true));
+              return;
+            }
+          } else {
+            emit(state.copyWith(
+                error: 'Printer not connected & no saved printer found!',
+                clearError: false));
+            emit(state.copyWith(clearError: true));
+            return;
+          }
+        }
+
+        try {
+          // Format the Z Report mimicking a receipt but replacing item list with summary
+          final items = [
+            {
+              'name': 'TOTAL TRANSACTIONS',
+              'qty': sales.length,
+              'price': 0.0,
+              'total': 0.0,
+            },
+            {
+              'name': 'GROSS SALES',
+              'qty': 1,
+              'price': grandTotal,
+              'total': grandTotal,
+            }
+          ];
+
+          await printerHelper.printReceipt(
+            shopName: '*** Z REPORT ***\n${event.shopName}',
+            address1: 'END OF DAY BATCH',
+            address2: 'Date: ${DateTime.now().toString().substring(0, 16)}',
+            phone: '',
+            items: items,
+            total: grandTotal,
+            footer: 'Z-REPORT CLOSED SUCCESSFULLY',
+          );
+
+          emit(state.copyWith(isPrinting: false, printSuccess: true));
+        } catch (e) {
+          emit(state.copyWith(
+              isPrinting: false, error: 'Print failed: $e', clearError: false));
+          emit(state.copyWith(clearError: true));
+        }
+      },
+    );
   }
 }

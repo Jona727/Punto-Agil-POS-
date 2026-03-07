@@ -1,51 +1,35 @@
 import 'package:equatable/equatable.dart';
-import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
-enum PrinterStatus {
-  initial,
-  scanning,
-  scanSuccess,
-  scanFailure,
-  connecting,
-  connected,
-  connectionFailure,
-  disconnected,
-  testPrinting
-}
+enum PrinterStatus { initial, scanning, connected, disconnected, error, connecting }
 
 class PrinterState extends Equatable {
   final PrinterStatus status;
-  final String? connectedMac;
+  final String? connectedIp;
   final String? connectedName;
-  final List<BluetoothInfo> devices;
   final String? errorMessage;
 
   const PrinterState({
     this.status = PrinterStatus.initial,
-    this.connectedMac,
+    this.connectedIp,
     this.connectedName,
-    this.devices = const [],
     this.errorMessage,
   });
 
   PrinterState copyWith({
     PrinterStatus? status,
-    String? connectedMac,
+    String? connectedIp,
     String? connectedName,
-    List<BluetoothInfo>? devices,
     String? errorMessage,
-    bool clearError = false,
   }) {
     return PrinterState(
       status: status ?? this.status,
-      connectedMac: connectedMac ?? this.connectedMac,
+      connectedIp: connectedIp ?? this.connectedIp,
       connectedName: connectedName ?? this.connectedName,
-      devices: devices ?? this.devices,
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
   @override
   List<Object?> get props =>
-      [status, connectedMac, connectedName, devices, errorMessage];
+      [status, connectedIp, connectedName, errorMessage];
 }

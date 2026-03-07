@@ -58,3 +58,14 @@ class GetProductByBarcodeUseCase implements UseCase<Product, String> {
     return repository.getProductByBarcode(params);
   }
 }
+
+class UpdatePricesMassivelyUseCase implements UseCase<void, double> {
+  final ProductRepository repository;
+
+  UpdatePricesMassivelyUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, void>> call(double params) {
+    return repository.updatePricesMassively(params);
+  }
+}

@@ -1,6 +1,6 @@
-# 🛒 Mobile POS & Billing App 
+# 🛒 PuntoÁgil POS (Mobile POS & Billing App)
 
-A feature-rich, high-performance offline-first billing and Point of Sale (POS) application built with Flutter. Designed for seamless retail checkout operations featuring barcode scanning, thermal Bluetooth printing, and robust local data persistence.
+Una aplicación de facturación y Punto de Venta (POS) "Offline-First" rápida, rica en funciones y construida con Flutter. Diseñada para agilizar las operaciones de cobro en comercios minoristas locales, incluyendo escaneo de códigos de barras, pagos mediante Alias (Mercado Pago / Billeteras Virtuales), impresión térmica por Wi-Fi (TCP/IP) y persistencia robusta de datos locales.
 
 ## Screenshot
 
@@ -16,9 +16,10 @@ This application serves as a complete offline POS system for small to medium-siz
 ### Core Features:
 - **Product Management System**: Complete CRUD operations for inventory items with barcode/QR code support.
 - **Smart Checkout System**: Rapid cart building via camera-based barcode scanning or manual entry, and robust order calculation functionality.
-- **Bluetooth Thermal Printing**: Direct integration with thermal printers (`print_bluetooth_thermal`) to instantly output physical receipts.
+- **Wi-Fi Thermal Printing**: Direct TCP/IP socket integration (Port 9100) to instantly output physical receipts and Z-Reports over the local network.
+- **Virtual Wallets Integration**: Dynamic QR code generation on the checkout screen allowing customers to easily transfer funds to a configured Alias/CVU (e.g. Mercado Pago).
 - **Shop Settings & Customization**: Centrally managed shop details printed dynamically on receipts.
-- **Offline-First Architecture**: Powered by `Hive` for lightning-fast localized NoSQL data storage. No active internet connectivity required.
+- **Offline-First Architecture**: Powered by `Hive` for lightning-fast localized NoSQL data storage. No active internet connectivity required for the core flow.
 
 ## 🛠 Tech Stack & Architecture
 
@@ -31,7 +32,7 @@ Built leveraging industry-standard architectural principles (Clean Architecture 
 - **Local Database**: `hive` & `hive_flutter`
 - **Data Modeling**: `json_serializable`, `equatable`
 - **Functional Programming**: `fpdart`
-- **Hardware Integrations**: `mobile_scanner` (barcodes), `print_bluetooth_thermal`
+- **Hardware Integrations**: `mobile_scanner` (barcodes), Native `dart:io` Sockets (Thermal TCP/IP Printing)
 
 ## 📁 File Structure
 
@@ -60,16 +61,16 @@ lib/
 ## 💡 Use Cases
 
 - **Rapid Billing Entry**: A cashier launches the app, navigates to the checkout page, and uses the device camera to instantly scan product barcodes. The products are added to the cart, the total is calculated including taxes, and a receipt is finalized.
-- **Physical Receipt Generation**: After checkout confirmation, the app triggers a connected external Bluetooth thermal POS printer to instantly print an itemized paper receipt with the shop’s header.
+- **QR Payments & Physical Receipt Generation**: After checkout confirmation, the customer scans the Mercado Pago QR off the screen. Once confirmed, the cashier triggers a connected external Wi-Fi thermal POS printer to instantly print an itemized paper receipt over the LAN network.
 - **Inventory Sideloading**: A manager opens the Product feature to add new stock to the local database, taking a picture of the barcode to bind the SKU for future lightning-fast checkouts.
-- **No-Connection Operation**: The business operates a stall at an exhibition with poor networking. The app functions entirely via its embedded Hive local database and Bluetooth, completely undisturbed by network drops.
+- **Offline Operation**: The business experiences an internet outage. The app functions entirely via its embedded Hive local database and local Wi-Fi router, completely undisturbed by WAN connectivity drops.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Flutter SDK `^3.1.0` or higher
 - Android Studio / Xcode for emulators and building.
-- *Optional*: A physical Android/iOS device and a Bluetooth Thermal Printer for testing hardware integrations natively.
+- *Optional*: A physical Android/iOS device and a local network with a Thermal Printer (Port 9100) for testing hardware integrations natively.
 
 ### Installation
 

@@ -63,6 +63,13 @@ class _ProductListPageState extends State<ProductListPage> {
         title: const Text('Product Management',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.percent_rounded),
+            tooltip: 'Aumento Masivo',
+            onPressed: () => _showMassiveUpdateDialog(context),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -194,7 +201,7 @@ class _ProductListPageState extends State<ProductListPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '₹${product.price.toStringAsFixed(2)}',
+                                  '\$${product.price.toStringAsFixed(2)}',
                                   style: TextStyle(
                                       fontWeight: FontWeight.w500,
                                       color: Colors.grey[600]),
@@ -277,6 +284,72 @@ class _ProductListPageState extends State<ProductListPage> {
                 Navigator.pop(innerContext);
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showMassiveUpdateDialog(BuildContext context) {
+    final TextEditingController percentageController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (innerContext) {
+        return AlertDialog(
+          title: const Text('Update Prices Massively'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                    'Enter the percentage (%) to increase all product prices:'),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: percentageController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Percentage (%)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.percent),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a percentage';
+                    }
+                    final number = double.tryParse(value);
+                    if (number == null) {
+                      return 'Please enter a valid number';
+                    }
+                    if (number <= 0) {
+                      return 'Percentage must be greater than 0';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(innerContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  final percentage = double.parse(percentageController.text);
+                  context
+                      .read<ProductBloc>()
+                      .add(UpdatePricesMassively(percentage));
+                  Navigator.pop(innerContext);
+                }
+              },
+              child: const Text('Apply'),
             ),
           ],
         );

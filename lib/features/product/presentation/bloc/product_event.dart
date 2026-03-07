@@ -29,3 +29,10 @@ class DeleteProduct extends ProductEvent {
   @override
   List<Object> get props => [id];
 }
+
+class UpdatePricesMassively extends ProductEvent {
+  final double percentage;
+  const UpdatePricesMassively(this.percentage);
+  @override
+  List<Object> get props => [percentage];
+}
