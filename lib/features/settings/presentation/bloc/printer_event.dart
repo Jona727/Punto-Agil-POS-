@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
 abstract class PrinterEvent extends Equatable {
   const PrinterEvent();
@@ -6,6 +7,8 @@ abstract class PrinterEvent extends Equatable {
   @override
   List<Object?> get props => [];
 }
+
+// ── Wi-Fi / LAN events ───────────────────────────────────────────────────────
 
 class InitPrinterEvent extends PrinterEvent {}
 
@@ -29,6 +32,32 @@ class TestPrintEvent extends PrinterEvent {
   final String shopName;
 
   const TestPrintEvent(this.shopName);
+
+  @override
+  List<Object?> get props => [shopName];
+}
+
+// ── Bluetooth events ─────────────────────────────────────────────────────────
+
+class InitBluetoothPrinterEvent extends PrinterEvent {}
+
+class ScanBluetoothEvent extends PrinterEvent {}
+
+class ConnectBluetoothEvent extends PrinterEvent {
+  final BluetoothDevice device;
+
+  const ConnectBluetoothEvent(this.device);
+
+  @override
+  List<Object?> get props => [device.address];
+}
+
+class DisconnectBluetoothEvent extends PrinterEvent {}
+
+class TestPrintBluetoothEvent extends PrinterEvent {
+  final String shopName;
+
+  const TestPrintBluetoothEvent(this.shopName);
 
   @override
   List<Object?> get props => [shopName];

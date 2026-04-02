@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -20,7 +21,6 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    // Re-initialize printer state whenever settings page opens
     context.read<PrinterBloc>().add(InitPrinterEvent());
   }
 
@@ -46,7 +46,8 @@ class _SettingsPageState extends State<SettingsPage> {
             Container(
               width: double.infinity,
               color: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
               child: BlocBuilder<ShopBloc, ShopState>(
                 builder: (context, state) {
                   String shopName = 'Elite Groceries';
@@ -141,17 +142,19 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const SizedBox(height: 24),
 
-            // Hardware Section
-            _buildSectionHeader('Hardware - Printer'),
+            // ── Wi-Fi Printer Section ──────────────────────────────────────
+            _buildSectionHeader('Hardware - Printer (Wi-Fi / LAN)'),
             BlocConsumer<PrinterBloc, PrinterState>(
               listener: (context, state) {
-                if (state.status == PrinterStatus.error && state.errorMessage != null) {
+                if (state.wifiStatus == PrinterStatus.error &&
+                    state.wifiErrorMessage != null) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(state.errorMessage!),
+                      content: Text(state.wifiErrorMessage!),
                       backgroundColor: Colors.red));
-                } else if (state.status == PrinterStatus.connected) {
+                } else if (state.wifiStatus == PrinterStatus.connected &&
+                    state.connectedIp != null) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Connected to printer!'),
+                      content: Text('Connected to Wi-Fi printer!'),
                       backgroundColor: Colors.green));
                 }
               },
@@ -167,38 +170,24 @@ class _SettingsPageState extends State<SettingsPage> {
                             state.connectedIp != null
                                 ? 'IP: ${state.connectedIp}'
                                 : 'No printer connected',
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey[500]),
+                            style:
+                                TextStyle(fontSize: 12, color: Colors.grey[500]),
                           ),
                           if (state.connectedIp != null) ...[
                             const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                  color: Colors.teal[100],
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.teal[200]!)),
-                              child: Text(
-                                'CONNECTED',
-                                style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.teal[700]),
-                              ),
-                            ),
+                            _buildBadge('CONNECTED', Colors.teal),
                           ]
                         ],
                       ),
                       trailingWidget: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (state.status == PrinterStatus.connecting)
+                          if (state.wifiStatus == PrinterStatus.connecting)
                             const SizedBox(
                                 width: 24,
                                 height: 24,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2))
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2))
                           else if (state.connectedIp != null)
                             IconButton(
                               icon: const Icon(Icons.link_off),
@@ -209,11 +198,26 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           IconButton(
                             icon: const Icon(Icons.add_link),
-                            onPressed: () {
-                              _showConnectIpDialog(context);
-                            },
+                            onPressed: () => _showConnectIpDialog(context),
                             color: AppTheme.primaryColor,
                           ),
+                          if (state.connectedIp != null)
+                            IconButton(
+                              icon: const Icon(Icons.print_outlined),
+                              tooltip: 'Test Print (Wi-Fi)',
+                              onPressed: () {
+                                final shopState =
+                                    context.read<ShopBloc>().state;
+                                String shopName = 'Elite Groceries';
+                                if (shopState is ShopLoaded) {
+                                  shopName = shopState.shop.name;
+                                }
+                                context
+                                    .read<PrinterBloc>()
+                                    .add(TestPrintEvent(shopName));
+                              },
+                              color: Colors.grey[600],
+                            ),
                         ],
                       ),
                     ),
@@ -223,9 +227,147 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               child: Text(
-                "Tap the + link icon to configure your Thermal Printer using its local network IP Address (e.g., 192.168.1.50). Make sure both devices are on the same Wi-Fi.",
+                "Tap + to configure your Thermal Printer via IP Address (e.g. 192.168.1.50). Both devices must be on the same Wi-Fi network.",
+                style: TextStyle(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey[500]),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── Bluetooth Printer Section ──────────────────────────────────
+            _buildSectionHeader('Hardware - Printer (Bluetooth)'),
+            BlocConsumer<PrinterBloc, PrinterState>(
+              listenWhen: (prev, curr) =>
+                  prev.btStatus != curr.btStatus ||
+                  prev.connectedBtAddress != curr.connectedBtAddress,
+              listener: (context, state) {
+                if (state.btStatus == PrinterStatus.error &&
+                    state.btErrorMessage != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(state.btErrorMessage!),
+                      backgroundColor: Colors.red));
+                } else if (state.btStatus == PrinterStatus.connected &&
+                    state.connectedBtAddress != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Connected to Bluetooth printer!'),
+                      backgroundColor: Colors.green));
+                }
+              },
+              builder: (context, state) {
+                return _buildListGroup(
+                  children: [
+                    // Status row
+                    _buildListItem(
+                      icon: Icons.bluetooth_connected,
+                      title: 'Bluetooth Device',
+                      subtitleWidget: Row(
+                        children: [
+                          Text(
+                            state.connectedBtAddress != null
+                                ? state.connectedBtName ??
+                                    state.connectedBtAddress!
+                                : 'No device connected',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[500]),
+                          ),
+                          if (state.connectedBtAddress != null) ...[
+                            const SizedBox(width: 8),
+                            _buildBadge('CONNECTED', Colors.blue),
+                          ],
+                          if (state.btStatus == PrinterStatus.scanning) ...[
+                            const SizedBox(width: 8),
+                            _buildBadge('SCANNING…', Colors.orange),
+                          ],
+                        ],
+                      ),
+                      trailingWidget: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (state.btStatus == PrinterStatus.connecting ||
+                              state.btStatus == PrinterStatus.scanning)
+                            const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2))
+                          else ...[
+                            // Scan / list paired devices
+                            IconButton(
+                              icon: const Icon(Icons.bluetooth_searching),
+                              tooltip: 'Scan paired devices',
+                              onPressed: () {
+                                context
+                                    .read<PrinterBloc>()
+                                    .add(ScanBluetoothEvent());
+                              },
+                              color: AppTheme.primaryColor,
+                            ),
+                            if (state.connectedBtAddress != null) ...[
+                              IconButton(
+                                icon: const Icon(Icons.link_off),
+                                tooltip: 'Disconnect Bluetooth',
+                                onPressed: () => context
+                                    .read<PrinterBloc>()
+                                    .add(DisconnectBluetoothEvent()),
+                                color: Colors.red,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.print_outlined),
+                                tooltip: 'Test Print (Bluetooth)',
+                                onPressed: () {
+                                  final shopState =
+                                      context.read<ShopBloc>().state;
+                                  String shopName = 'Elite Groceries';
+                                  if (shopState is ShopLoaded) {
+                                    shopName = shopState.shop.name;
+                                  }
+                                  context.read<PrinterBloc>().add(
+                                      TestPrintBluetoothEvent(shopName));
+                                },
+                                color: Colors.grey[600],
+                              ),
+                            ],
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    // Device list (shown after scan)
+                    if (state.availableBtDevices.isNotEmpty) ...[
+                      _buildDivider(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('Paired devices',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[500],
+                                  letterSpacing: 0.5)),
+                        ),
+                      ),
+                      ...state.availableBtDevices
+                          .map((device) => _buildBluetoothDeviceTile(
+                              context, device, state)),
+                    ],
+                  ],
+                );
+              },
+            ),
+
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              child: Text(
+                "Tap the Bluetooth scan icon to list paired devices. Make sure your printer is paired in Android Settings and turned on before scanning.",
                 style: TextStyle(
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
@@ -240,25 +382,98 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  Widget _buildBluetoothDeviceTile(
+      BuildContext context, BluetoothDevice device, PrinterState state) {
+    final isConnected = state.connectedBtAddress == device.address;
+    return InkWell(
+      onTap: () {
+        if (!isConnected) {
+          context
+              .read<PrinterBloc>()
+              .add(ConnectBluetoothEvent(device));
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            Icon(Icons.bluetooth,
+                size: 20,
+                color: isConnected
+                    ? Colors.blue
+                    : Colors.grey[400]),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    device.name ?? 'Unknown Device',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isConnected
+                            ? FontWeight.bold
+                            : FontWeight.normal),
+                  ),
+                  Text(device.address,
+                      style: TextStyle(
+                          fontSize: 11, color: Colors.grey[500])),
+                ],
+              ),
+            ),
+            if (isConnected)
+              _buildBadge('CONNECTED', Colors.blue)
+            else
+              Text('Tap to connect',
+                  style: TextStyle(
+                      fontSize: 11, color: Colors.grey[400])),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadge(String label, MaterialColor color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color[100],
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color[200]!),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            color: color[700]),
+      ),
+    );
+  }
+
   void _showConnectIpDialog(BuildContext context) {
     final TextEditingController ipController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Connect Printer'),
+          title: const Text('Connect Wi-Fi Printer'),
           content: TextField(
             controller: ipController,
             decoration: const InputDecoration(
               hintText: 'e.g. 192.168.1.100',
               labelText: 'Printer IP Address',
             ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              child:
+                  const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -348,8 +563,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(subtitle,
-                        style:
-                            TextStyle(fontSize: 12, color: Colors.grey[500])),
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey[500])),
                   ],
                   if (subtitleWidget != null) ...[
                     const SizedBox(height: 4),

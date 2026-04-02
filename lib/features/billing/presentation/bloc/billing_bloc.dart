@@ -1,9 +1,11 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import '../../domain/entities/cart_item.dart';
 import 'package:billing_app/features/product/domain/entities/product.dart';
 import 'package:billing_app/features/product/domain/usecases/product_usecases.dart';
 import '../../../../core/utils/printer_helper.dart';
+import '../../../../core/utils/bluetooth_printer_helper.dart';
 import '../../../../core/data/hive_database.dart';
 import '../../domain/usecases/sale_usecases.dart';
 import '../../domain/entities/sale.dart';
@@ -115,27 +117,51 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
 
   Future<void> _onPrintReceipt(
       PrintReceiptEvent event, Emitter<BillingState> emit) async {
-    final printerHelper = PrinterHelper();
+    final wifiHelper = PrinterHelper();
+    final btHelper = BluetoothPrinterHelper();
+    bool usingBluetooth = false;
 
-    if (!printerHelper.isConnected) {
-      final savedMac = HiveDatabase.settingsBox.get('printer_mac');
-      if (savedMac != null) {
-        final connected = await printerHelper.connect(savedMac);
+    // ── Step 1: try to use/establish a connection ─────────────────────────
+    if (!wifiHelper.isConnected && !btHelper.isConnected) {
+      // Try WiFi first
+      final savedIp = HiveDatabase.settingsBox.get('printer_ip') as String?;
+      if (savedIp != null && savedIp.isNotEmpty) {
+        final connected = await wifiHelper.connect(savedIp);
         if (!connected) {
           emit(state.copyWith(
-              error: 'Failed to auto-connect to printer!', clearError: false));
+              error: 'Failed to auto-connect to Wi-Fi printer!',
+              clearError: false));
           emit(state.copyWith(clearError: true));
           return;
         }
       } else {
-        emit(state.copyWith(
-            error: 'Printer not connected & no saved printer found!',
-            clearError: false));
-        emit(state.copyWith(clearError: true));
-        return;
+        // Try Bluetooth fallback
+        final savedBtAddr =
+            HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+        if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
+          final device = BluetoothDevice(address: savedBtAddr);
+          final connected = await btHelper.connect(device);
+          if (!connected) {
+            emit(state.copyWith(
+                error: 'Failed to auto-connect to Bluetooth printer!',
+                clearError: false));
+            emit(state.copyWith(clearError: true));
+            return;
+          }
+          usingBluetooth = true;
+        } else {
+          emit(state.copyWith(
+              error: 'No printer configured. Go to Settings → Hardware to add one.',
+              clearError: false));
+          emit(state.copyWith(clearError: true));
+          return;
+        }
       }
+    } else if (btHelper.isConnected && !wifiHelper.isConnected) {
+      usingBluetooth = true;
     }
 
+    // ── Step 2: print ─────────────────────────────────────────────────────
     emit(state.copyWith(
         isPrinting: true, printSuccess: false, clearError: true));
 
@@ -149,16 +175,26 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
               })
           .toList();
 
-      await printerHelper.printReceipt(
-          shopName: event.shopName,
-          address1: event.address1,
-          address2: event.address2,
-          phone: event.phone,
-          items: items,
-          total: state.totalAmount,
-          footer: event.footer);
+      if (usingBluetooth) {
+        await btHelper.printReceipt(
+            shopName: event.shopName,
+            address1: event.address1,
+            address2: event.address2,
+            phone: event.phone,
+            items: items,
+            total: state.totalAmount,
+            footer: event.footer);
+      } else {
+        await wifiHelper.printReceipt(
+            shopName: event.shopName,
+            address1: event.address1,
+            address2: event.address2,
+            phone: event.phone,
+            items: items,
+            total: state.totalAmount,
+            footer: event.footer);
+      }
 
-      // Save sale to DB when printing is successfully queued
       final sale = Sale(
         id: const Uuid().v4(),
         date: DateTime.now(),
@@ -170,7 +206,6 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     } catch (e) {
       emit(state.copyWith(
           isPrinting: false, error: 'Print failed: $e', clearError: false));
-      // Reset error instantly avoids sticky error
       emit(state.copyWith(clearError: true));
     }
   }
@@ -205,25 +240,46 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           grandTotal += sale.total;
         }
 
-        final printerHelper = PrinterHelper();
-        if (!printerHelper.isConnected) {
-          final savedMac = HiveDatabase.settingsBox.get('printer_mac');
-          if (savedMac != null) {
-            final connected = await printerHelper.connect(savedMac);
+        final wifiHelper = PrinterHelper();
+        final btHelper = BluetoothPrinterHelper();
+        bool usingBluetooth = false;
+
+        if (!wifiHelper.isConnected && !btHelper.isConnected) {
+          final savedIp =
+              HiveDatabase.settingsBox.get('printer_ip') as String?;
+          if (savedIp != null && savedIp.isNotEmpty) {
+            final connected = await wifiHelper.connect(savedIp);
             if (!connected) {
               emit(state.copyWith(
-                  error: 'Failed to auto-connect to printer!',
+                  error: 'Failed to auto-connect to Wi-Fi printer!',
                   clearError: false));
               emit(state.copyWith(clearError: true));
               return;
             }
           } else {
-            emit(state.copyWith(
-                error: 'Printer not connected & no saved printer found!',
-                clearError: false));
-            emit(state.copyWith(clearError: true));
-            return;
+            final savedBtAddr =
+                HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+            if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
+              final device = BluetoothDevice(address: savedBtAddr);
+              final connected = await btHelper.connect(device);
+              if (!connected) {
+                emit(state.copyWith(
+                    error: 'Failed to auto-connect to Bluetooth printer!',
+                    clearError: false));
+                emit(state.copyWith(clearError: true));
+                return;
+              }
+              usingBluetooth = true;
+            } else {
+              emit(state.copyWith(
+                  error: 'No printer configured. Go to Settings → Hardware to add one.',
+                  clearError: false));
+              emit(state.copyWith(clearError: true));
+              return;
+            }
           }
+        } else if (btHelper.isConnected && !wifiHelper.isConnected) {
+          usingBluetooth = true;
         }
 
         try {
@@ -243,7 +299,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
             }
           ];
 
-          await printerHelper.printReceipt(
+          final receiptArgs = (
             shopName: '*** Z REPORT ***\n${event.shopName}',
             address1: 'END OF DAY BATCH',
             address2: 'Date: ${DateTime.now().toString().substring(0, 16)}',
@@ -252,6 +308,27 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
             total: grandTotal,
             footer: 'Z-REPORT CLOSED SUCCESSFULLY',
           );
+          if (usingBluetooth) {
+            await btHelper.printReceipt(
+              shopName: receiptArgs.shopName,
+              address1: receiptArgs.address1,
+              address2: receiptArgs.address2,
+              phone: receiptArgs.phone,
+              items: receiptArgs.items,
+              total: receiptArgs.total,
+              footer: receiptArgs.footer,
+            );
+          } else {
+            await wifiHelper.printReceipt(
+              shopName: receiptArgs.shopName,
+              address1: receiptArgs.address1,
+              address2: receiptArgs.address2,
+              phone: receiptArgs.phone,
+              items: receiptArgs.items,
+              total: receiptArgs.total,
+              footer: receiptArgs.footer,
+            );
+          }
 
           emit(state.copyWith(isPrinting: false, printSuccess: true));
         } catch (e) {
