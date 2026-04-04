@@ -17,6 +17,9 @@ class PrinterState extends Equatable {
   final List<BluetoothDevice> availableBtDevices;
   final String? btErrorMessage;
 
+  // Preferences
+  final String preferredType; // 'wifi', 'bluetooth', or 'none'
+
   const PrinterState({
     this.wifiStatus = PrinterStatus.initial,
     this.connectedIp,
@@ -27,6 +30,7 @@ class PrinterState extends Equatable {
     this.connectedBtName,
     this.availableBtDevices = const [],
     this.btErrorMessage,
+    this.preferredType = 'none',
   });
 
   // ── backwards-compat getters so existing code keeps working ──────────────
@@ -47,6 +51,7 @@ class PrinterState extends Equatable {
     bool clearBtName = false,
     List<BluetoothDevice>? availableBtDevices,
     String? btErrorMessage,
+    String? preferredType,
   }) {
     return PrinterState(
       wifiStatus: wifiStatus ?? this.wifiStatus,
@@ -58,6 +63,7 @@ class PrinterState extends Equatable {
       connectedBtName: clearBtName ? null : (connectedBtName ?? this.connectedBtName),
       availableBtDevices: availableBtDevices ?? this.availableBtDevices,
       btErrorMessage: btErrorMessage ?? this.btErrorMessage,
+      preferredType: preferredType ?? this.preferredType,
     );
   }
 
@@ -72,5 +78,6 @@ class PrinterState extends Equatable {
         connectedBtName,
         availableBtDevices,
         btErrorMessage,
+        preferredType,
       ];
 }

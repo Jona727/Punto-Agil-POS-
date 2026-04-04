@@ -1,4 +1,5 @@
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/data/hive_database.dart';
 import '../../../../core/utils/printer_helper.dart';
@@ -13,7 +14,13 @@ class PrinterRepositoryImpl implements PrinterRepository {
 
   @override
   Future<bool> checkPermission() async {
-    return true; // WiFi doesn't need special permissions
+    // Bluetooth permissions are required for Scanning and Connecting on Android 12+
+    final scan = await Permission.bluetoothScan.request();
+    final connect = await Permission.bluetoothConnect.request();
+    // Location is often needed for scanning in older Android versions or some devices
+    await Permission.location.request();
+
+    return scan.isGranted && connect.isGranted;
   }
 
   @override
@@ -97,5 +104,17 @@ class PrinterRepositoryImpl implements PrinterRepository {
   Future<void> testPrintBluetooth(String shopName) async {
     await _btHelper
         .printText("Test Print\n\n$shopName\n\n----------------\n\n");
+  }
+
+  // ── Preferences ────────────────────────────────────────────────────────────
+
+  @override
+  String getPreferredPrinterType() {
+    return HiveDatabase.settingsBox.get('preferred_printer_type') ?? 'none';
+  }
+
+  @override
+  Future<void> savePreferredPrinterType(String type) async {
+    await HiveDatabase.settingsBox.put('preferred_printer_type', type);
   }
 }

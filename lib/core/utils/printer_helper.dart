@@ -97,8 +97,10 @@ class PrinterHelper {
     bytes += EscPos.lineFeed;
 
     // Date and Time
+    // Argentina time (UTC-3) — computed locally, no internet needed
+    final now = DateTime.now().toUtc().subtract(const Duration(hours: 3));
     String formattedDate =
-        DateFormat('dd-MM-yyyy hh:mm a').format(DateTime.now());
+        DateFormat('dd-MM-yyyy hh:mm a').format(now);
     bytes += _textToBytes(formattedDate);
     bytes += EscPos.lineFeed;
 

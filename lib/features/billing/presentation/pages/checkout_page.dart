@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_app/core/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,6 +17,36 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  Timer? _resetTimer;
+  int _countdown = 5;
+
+  @override
+  void dispose() {
+    _resetTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startResetCountdown() {
+    setState(() => _countdown = 5);
+    _resetTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() => _countdown--);
+      if (_countdown <= 0) {
+        timer.cancel();
+        _resetAndGoHome();
+      }
+    });
+  }
+
+  void _resetAndGoHome() {
+    _resetTimer?.cancel();
+    context.read<BillingBloc>().add(ClearCartEvent());
+    context.go('/');
+  }
+
   @override
   Widget build(BuildContext context) {
     const borderColor = Color(0xFFE5E5EA);
@@ -23,8 +55,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         canPop: false,
         onPopInvokedWithResult: (bool didPop, dynamic result) {
           if (didPop) return;
-          context.read<BillingBloc>().add(ClearCartEvent());
-          context.go('/');
+          _resetAndGoHome();
         },
         child: Scaffold(
           appBar: AppBar(
@@ -36,20 +67,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
             leading: IconButton(
               icon: Icon(Icons.chevron_left,
                   size: 28, color: Theme.of(context).primaryColor),
-              onPressed: () {
-                context.read<BillingBloc>().add(ClearCartEvent());
-                context.go('/');
-              },
+              onPressed: _resetAndGoHome,
             ),
           ),
           body: BlocConsumer<BillingBloc, BillingState>(
             listener: (context, state) {
               if (state.printSuccess) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Printed successfully'),
-                    backgroundColor: Colors.green));
-                // context.read<BillingBloc>().add(ClearCartEvent());
-                // context.go('/');
+                _startResetCountdown();
               }
             },
             builder: (context, billingState) {
@@ -63,6 +87,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   shopName = shopState.shop.name;
                 }
 
+                // Build MercadoPago deep-link (offline-safe: URL is generated locally)
+                final mpUrl = upiId.isNotEmpty
+                    ? 'https://link.mercadopago.com.ar/$upiId'
+                    : '';
+
                 return Column(
                   children: [
                     Expanded(
@@ -71,7 +100,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             horizontal: 16, vertical: 16),
                         child: Column(
                           children: [
-                            // Table
+                            // Items table
                             Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -94,7 +123,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                     bottom: BorderSide(color: borderColor),
                                   ),
                                   children: [
-                                    // Header row
                                     TableRow(
                                       decoration: const BoxDecoration(
                                         color: Color(0xFFF8FAFC),
@@ -111,7 +139,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                             'Total', TextAlign.right),
                                       ],
                                     ),
-                                    // Items rows
                                     ...billingState.cartItems.map((item) {
                                       return TableRow(
                                         children: [
@@ -135,9 +162,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               ),
                             ),
                             const SizedBox(height: 24),
-
-                            const SizedBox(
-                                height: 120), // padding for bottom fixed bar
+                            const SizedBox(height: 120),
                           ],
                         ),
                       ),
@@ -162,38 +187,86 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Column(
                               children: [
-                                const SizedBox(
-                                  height: 8,
-                                ),
-                                upiId.isNotEmpty
-                                    ? Column(
-                                        children: [
-                                          const Text(
-                                            'Escanear para Pagar',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
-                                              letterSpacing: 1.1,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 12),
-                                          SizedBox(
-                                            width: 180,
-                                            height: 180,
-                                            child: PrettyQrView.data(
-                                              data: upiId,
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    : const SizedBox.shrink(),
+                                const SizedBox(height: 8),
+
+                                // MercadoPago QR
+                                if (mpUrl.isNotEmpty)
+                                  Column(
+                                    children: [
+                                      const Text(
+                                        'Escanear para Pagar',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                          letterSpacing: 1.1,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        upiId,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey[500],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      SizedBox(
+                                        width: 180,
+                                        height: 180,
+                                        child: PrettyQrView.data(data: mpUrl),
+                                      ),
+                                    ],
+                                  ),
+
                                 const SizedBox(height: 15),
+
+                                // Countdown banner (shown after print)
+                                if (billingState.printSuccess)
+                                  Container(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green[50],
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                          color: Colors.green[200]!),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '✅ Impreso · Nueva venta en ${_countdown}s',
+                                          style: TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.green[800],
+                                              fontWeight: FontWeight.w600),
+                                        ),
+                                        TextButton(
+                                          onPressed: _resetAndGoHome,
+                                          style: TextButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: Size.zero,
+                                            tapTargetSize:
+                                                MaterialTapTargetSize
+                                                    .shrinkWrap,
+                                          ),
+                                          child: Text('Ahora →',
+                                              style: TextStyle(
+                                                  color: Colors.green[700],
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                // Total row
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -222,24 +295,31 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             ),
                           ),
                           PrimaryButton(
-                            onPressed: () {
-                              if (shopState is ShopLoaded) {
-                                context.read<BillingBloc>().add(
-                                    PrintReceiptEvent(
-                                        shopName: shopState.shop.name,
-                                        address1: shopState.shop.addressLine1,
-                                        address2: shopState.shop.addressLine2,
-                                        phone: shopState.shop.phoneNumber,
-                                        footer: shopState.shop.footerText));
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content:
-                                            Text('Shop details not loaded'),
-                                        backgroundColor: Colors.red));
-                              }
-                            },
-                            label: 'Print Receipt',
+                            onPressed: billingState.printSuccess
+                                ? null
+                                : () {
+                                    if (shopState is ShopLoaded) {
+                                      context.read<BillingBloc>().add(
+                                          PrintReceiptEvent(
+                                              shopName: shopState.shop.name,
+                                              address1:
+                                                  shopState.shop.addressLine1,
+                                              address2:
+                                                  shopState.shop.addressLine2,
+                                              phone: shopState.shop.phoneNumber,
+                                              footer:
+                                                  shopState.shop.footerText));
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  'Shop details not loaded'),
+                                              backgroundColor: Colors.red));
+                                    }
+                                  },
+                            label: billingState.printSuccess
+                                ? 'Impreso ✅'
+                                : 'Print Receipt',
                             icon: Icons.print,
                             isLoading: billingState.isPrinting,
                           ),

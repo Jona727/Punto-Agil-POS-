@@ -20,4 +20,8 @@ abstract class PrinterRepository {
   Future<void> saveBluetoothDevice(String address, String name);
   Future<void> clearSavedBluetooth();
   Future<void> testPrintBluetooth(String shopName);
+
+  // ── Preferences ────────────────────────────────────────────────────────────
+  String getPreferredPrinterType(); // 'wifi', 'bluetooth', or 'none'
+  Future<void> savePreferredPrinterType(String type);
 }

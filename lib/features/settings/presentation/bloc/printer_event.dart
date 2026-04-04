@@ -62,3 +62,14 @@ class TestPrintBluetoothEvent extends PrinterEvent {
   @override
   List<Object?> get props => [shopName];
 }
+
+// ── Preferences ────────────────────────────────────────────────────────────
+
+class SetPreferredPrinterEvent extends PrinterEvent {
+  final String type; // 'wifi', 'bluetooth', or 'none'
+
+  const SetPreferredPrinterEvent(this.type);
+
+  @override
+  List<Object?> get props => [type];
+}

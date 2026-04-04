@@ -142,8 +142,62 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const SizedBox(height: 24),
 
+            // ── Printer Selection ──────────────────────────────────────────
+            _buildSectionHeader('Hardware - Primary Printer'),
+            BlocBuilder<PrinterBloc, PrinterState>(
+              builder: (context, state) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[100]!),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Select which printer to use by default during checkout.',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _buildPrimaryOption(
+                            context,
+                            'wifi',
+                            'Wi-Fi / LAN',
+                            Icons.wifi,
+                            state.preferredType == 'wifi',
+                          ),
+                          const SizedBox(width: 8),
+                          _buildPrimaryOption(
+                            context,
+                            'bluetooth',
+                            'Bluetooth',
+                            Icons.bluetooth,
+                            state.preferredType == 'bluetooth',
+                          ),
+                          const SizedBox(width: 8),
+                          _buildPrimaryOption(
+                            context,
+                            'none',
+                            'Auto',
+                            Icons.auto_awesome,
+                            state.preferredType == 'none',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 24),
+
             // ── Wi-Fi Printer Section ──────────────────────────────────────
-            _buildSectionHeader('Hardware - Printer (Wi-Fi / LAN)'),
+            _buildSectionHeader('Wi-Fi / LAN Configuration'),
             BlocConsumer<PrinterBloc, PrinterState>(
               listener: (context, state) {
                 if (state.wifiStatus == PrinterStatus.error &&
@@ -578,6 +632,46 @@ class _SettingsPageState extends State<SettingsPage> {
             else if (trailingIcon != null)
               Icon(trailingIcon, color: Colors.grey[300]),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrimaryOption(BuildContext context, String type, String label,
+      IconData icon, bool isSelected) {
+    return Expanded(
+      child: InkWell(
+        onTap: () =>
+            context.read<PrinterBloc>().add(SetPreferredPrinterEvent(type)),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppTheme.primaryColor.withValues(alpha: 0.1)
+                : Colors.grey[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected ? AppTheme.primaryColor : Colors.grey[200]!,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(icon,
+                  size: 20,
+                  color: isSelected ? AppTheme.primaryColor : Colors.grey[400]),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? AppTheme.primaryColor : Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -122,43 +122,85 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     bool usingBluetooth = false;
 
     // ── Step 1: try to use/establish a connection ─────────────────────────
+    // ── Step 1: try to use/establish a connection ─────────────────────────
+    final String preferredType = HiveDatabase.settingsBox.get('preferred_printer_type') ?? 'none';
+
     if (!wifiHelper.isConnected && !btHelper.isConnected) {
-      // Try WiFi first
-      final savedIp = HiveDatabase.settingsBox.get('printer_ip') as String?;
-      if (savedIp != null && savedIp.isNotEmpty) {
-        final connected = await wifiHelper.connect(savedIp);
-        if (!connected) {
-          emit(state.copyWith(
-              error: 'Failed to auto-connect to Wi-Fi printer!',
-              clearError: false));
-          emit(state.copyWith(clearError: true));
-          return;
-        }
-      } else {
-        // Try Bluetooth fallback
-        final savedBtAddr =
-            HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+      if (preferredType == 'bluetooth') {
+        // Force Bluetooth
+        final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
         if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
           final device = BluetoothDevice(address: savedBtAddr);
           final connected = await btHelper.connect(device);
           if (!connected) {
-            emit(state.copyWith(
-                error: 'Failed to auto-connect to Bluetooth printer!',
-                clearError: false));
+            emit(state.copyWith(error: 'Failed to connect to preferred Bluetooth printer!', clearError: false));
             emit(state.copyWith(clearError: true));
             return;
           }
           usingBluetooth = true;
         } else {
-          emit(state.copyWith(
-              error: 'No printer configured. Go to Settings → Hardware to add one.',
-              clearError: false));
+          emit(state.copyWith(error: 'Bluetooth preferred but no device configured.', clearError: false));
+          emit(state.copyWith(clearError: true));
+          return;
+        }
+      } else {
+        // Try WiFi (either as preferred or as 'none' lead option)
+        final savedIp = HiveDatabase.settingsBox.get('printer_ip') as String?;
+        if (savedIp != null && savedIp.isNotEmpty) {
+          final connected = await wifiHelper.connect(savedIp);
+          if (connected) {
+            usingBluetooth = false;
+          } else if (preferredType == 'none') {
+            // Fallback to Bluetooth ONLY if mode is 'none'
+            final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+            if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
+              final device = BluetoothDevice(address: savedBtAddr);
+              final connectedBt = await btHelper.connect(device);
+              if (connectedBt) {
+                usingBluetooth = true;
+              } else {
+                emit(state.copyWith(error: 'Failed to auto-connect to any printer!', clearError: false));
+                emit(state.copyWith(clearError: true));
+                return;
+              }
+            } else {
+              emit(state.copyWith(error: 'Wi-Fi connection failed and no Bluetooth configured.', clearError: false));
+              emit(state.copyWith(clearError: true));
+              return;
+            }
+          } else {
+            // Preferred WiFi failed
+            emit(state.copyWith(error: 'Failed to connect to preferred Wi-Fi printer!', clearError: false));
+            emit(state.copyWith(clearError: true));
+            return;
+          }
+        } else if (preferredType == 'none') {
+          // No IP, try BT fallback
+          final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+          if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
+             final device = BluetoothDevice(address: savedBtAddr);
+             final connected = await btHelper.connect(device);
+             if (connected) {
+               usingBluetooth = true;
+             } else {
+               emit(state.copyWith(error: 'Failed to connect to Bluetooth printer!', clearError: false));
+               emit(state.copyWith(clearError: true));
+               return;
+             }
+          } else {
+             emit(state.copyWith(error: 'No printer configured.', clearError: false));
+             emit(state.copyWith(clearError: true));
+             return;
+          }
+        } else {
+          emit(state.copyWith(error: 'Preferred Wi-Fi not configured.', clearError: false));
           emit(state.copyWith(clearError: true));
           return;
         }
       }
-    } else if (btHelper.isConnected && !wifiHelper.isConnected) {
-      usingBluetooth = true;
+    } else {
+      // Already connected somewhere
+      usingBluetooth = btHelper.isConnected;
     }
 
     // ── Step 2: print ─────────────────────────────────────────────────────
@@ -243,43 +285,46 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
         final wifiHelper = PrinterHelper();
         final btHelper = BluetoothPrinterHelper();
         bool usingBluetooth = false;
+        final String preferredType = HiveDatabase.settingsBox.get('preferred_printer_type') ?? 'none';
 
         if (!wifiHelper.isConnected && !btHelper.isConnected) {
-          final savedIp =
-              HiveDatabase.settingsBox.get('printer_ip') as String?;
-          if (savedIp != null && savedIp.isNotEmpty) {
-            final connected = await wifiHelper.connect(savedIp);
-            if (!connected) {
-              emit(state.copyWith(
-                  error: 'Failed to auto-connect to Wi-Fi printer!',
-                  clearError: false));
-              emit(state.copyWith(clearError: true));
-              return;
-            }
-          } else {
-            final savedBtAddr =
-                HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+          if (preferredType == 'bluetooth') {
+            final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
             if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
               final device = BluetoothDevice(address: savedBtAddr);
               final connected = await btHelper.connect(device);
               if (!connected) {
-                emit(state.copyWith(
-                    error: 'Failed to auto-connect to Bluetooth printer!',
-                    clearError: false));
+                emit(state.copyWith(error: 'Failed to connect to Bluetooth printer for Z-Report', clearError: false));
                 emit(state.copyWith(clearError: true));
                 return;
               }
               usingBluetooth = true;
-            } else {
-              emit(state.copyWith(
-                  error: 'No printer configured. Go to Settings → Hardware to add one.',
-                  clearError: false));
-              emit(state.copyWith(clearError: true));
-              return;
+            }
+          } else {
+            final savedIp = HiveDatabase.settingsBox.get('printer_ip') as String?;
+            if (savedIp != null && savedIp.isNotEmpty) {
+              final connected = await wifiHelper.connect(savedIp);
+              if (connected) {
+                usingBluetooth = false;
+              } else if (preferredType == 'none') {
+                final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+                if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
+                  final device = BluetoothDevice(address: savedBtAddr);
+                  final connectedBt = await btHelper.connect(device);
+                  if (connectedBt) usingBluetooth = true;
+                }
+              }
+            } else if (preferredType == 'none') {
+               final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+               if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
+                  final device = BluetoothDevice(address: savedBtAddr);
+                  final connected = await btHelper.connect(device);
+                  if (connected) usingBluetooth = true;
+               }
             }
           }
-        } else if (btHelper.isConnected && !wifiHelper.isConnected) {
-          usingBluetooth = true;
+        } else {
+           usingBluetooth = btHelper.isConnected;
         }
 
         try {

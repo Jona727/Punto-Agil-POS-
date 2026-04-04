@@ -34,4 +34,15 @@ class SaleRepositoryImpl implements SaleRepository {
       return Left(CacheFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> voidSale(String saleId) async {
+    try {
+      final box = HiveDatabase.salesBox;
+      await box.delete(saleId);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
 }

@@ -20,6 +20,9 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
     on<ConnectBluetoothEvent>(_onConnectBluetooth);
     on<DisconnectBluetoothEvent>(_onDisconnectBluetooth);
     on<TestPrintBluetoothEvent>(_onTestPrintBluetooth);
+
+    // Preference handlers
+    on<SetPreferredPrinterEvent>(_onSetPreferredPrinter);
   }
 
   // ── Wi-Fi ─────────────────────────────────────────────────────────────────
@@ -38,6 +41,9 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
     } else {
       emit(state.copyWith(wifiStatus: PrinterStatus.disconnected));
     }
+
+    final preferred = repository.getPreferredPrinterType();
+    emit(state.copyWith(preferredType: preferred));
 
     // Also init BT state
     add(InitBluetoothPrinterEvent());
@@ -109,6 +115,18 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
 
   Future<void> _onScanBluetooth(
       ScanBluetoothEvent event, Emitter<PrinterState> emit) async {
+    // Check permissions first
+    final hasPermission = await repository.checkPermission();
+    if (!hasPermission) {
+      emit(state.copyWith(
+        btStatus: PrinterStatus.error,
+        btErrorMessage:
+            'Bluetooth permissions required to scan and connect devices.',
+      ));
+      emit(state.copyWith(btStatus: PrinterStatus.disconnected));
+      return;
+    }
+
     emit(state.copyWith(btStatus: PrinterStatus.scanning));
     try {
       final devices = await repository.getPairedBluetoothDevices();
@@ -168,5 +186,11 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
   Future<void> _onTestPrintBluetooth(
       TestPrintBluetoothEvent event, Emitter<PrinterState> emit) async {
     await repository.testPrintBluetooth(event.shopName);
+  }
+
+  Future<void> _onSetPreferredPrinter(
+      SetPreferredPrinterEvent event, Emitter<PrinterState> emit) async {
+    await repository.savePreferredPrinterType(event.type);
+    emit(state.copyWith(preferredType: event.type));
   }
 }
