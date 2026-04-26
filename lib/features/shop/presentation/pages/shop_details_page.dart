@@ -152,10 +152,10 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                       validator: AppValidators.required('Required'),
                     ),
                     const SizedBox(height: 15),
-                    const InputLabel(text: 'Alias / Link (MercadoPago)'),
+                    const InputLabel(text: 'MercadoPago Alias'),
                     _buildTextField(
                       controller: _upiController,
-                      hint: 'dineshsowndar@oksbi',
+                      hint: 'e.g. mi.tienda.mp',
                     ),
                     const SizedBox(height: 15),
                     Row(

@@ -18,11 +18,13 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
   final GetProductByBarcodeUseCase getProductByBarcodeUseCase;
   final SaveSaleUseCase saveSaleUseCase;
   final GetDailySalesUseCase getDailySalesUseCase;
+  final VoidSaleUseCase? voidSaleUseCase; // Note: Ensure this is injected in main.dart
 
   BillingBloc({
     required this.getProductByBarcodeUseCase,
     required this.saveSaleUseCase,
     required this.getDailySalesUseCase,
+    this.voidSaleUseCase,
   }) : super(const BillingState()) {
     on<ScanBarcodeEvent>(_onScanBarcode);
     on<AddProductToCartEvent>(_onAddProductToCart);
@@ -32,6 +34,8 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     on<ClearCartEvent>(_onClearCart);
     on<PrintReceiptEvent>(_onPrintReceipt);
     on<PrintZReportEvent>(_onPrintZReport);
+    on<LoadDailySalesEvent>(_onLoadDailySales);
+    on<VoidSaleEvent>(_onVoidSale);
   }
 
   Future<void> _onScanBarcode(
@@ -48,9 +52,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
 
   void _onAddProductToCart(
       AddProductToCartEvent event, Emitter<BillingState> emit) {
-    // Clear error when adding
     final cleanState = state.copyWith(error: null);
-
     final existingIndex = cleanState.cartItems
         .indexWhere((item) => item.product.id == event.product.id);
     if (existingIndex >= 0) {
@@ -80,7 +82,6 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
       add(RemoveProductFromCartEvent(event.productId));
       return;
     }
-
     final index = state.cartItems
         .indexWhere((item) => item.product.id == event.productId);
     if (index >= 0) {
@@ -92,21 +93,14 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
 
   void _onUpdateItemPrice(
       UpdateItemPriceEvent event, Emitter<BillingState> emit) {
-    if (event.newPrice < 0) return; // Prevent negative prices
-
+    if (event.newPrice < 0) return;
     final index = state.cartItems
         .indexWhere((item) => item.product.id == event.productId);
-    
     if (index >= 0) {
       final items = List<CartItem>.from(state.cartItems);
       final item = items[index];
-      
-      // Override the internal product representation for this local sale
       final modifiedProduct = item.product.copyWith(price: event.newPrice);
-      
-      // Swap the item back into the cart
       items[index] = item.copyWith(product: modifiedProduct);
-      
       emit(state.copyWith(cartItems: items));
     }
   }
@@ -120,90 +114,98 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     final wifiHelper = PrinterHelper();
     final btHelper = BluetoothPrinterHelper();
     bool usingBluetooth = false;
-
-    // ── Step 1: try to use/establish a connection ─────────────────────────
-    // ── Step 1: try to use/establish a connection ─────────────────────────
-    final String preferredType = HiveDatabase.settingsBox.get('preferred_printer_type') ?? 'none';
+    final String preferredType =
+        HiveDatabase.settingsBox.get('preferred_printer_type') ?? 'none';
 
     if (!wifiHelper.isConnected && !btHelper.isConnected) {
       if (preferredType == 'bluetooth') {
-        // Force Bluetooth
-        final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+        final savedBtAddr =
+            HiveDatabase.settingsBox.get('printer_bt_address') as String?;
         if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
           final device = BluetoothDevice(address: savedBtAddr);
           final connected = await btHelper.connect(device);
           if (!connected) {
-            emit(state.copyWith(error: 'Failed to connect to preferred Bluetooth printer!', clearError: false));
+            emit(state.copyWith(
+                error: 'Failed to connect to preferred Bluetooth printer!',
+                clearError: false));
             emit(state.copyWith(clearError: true));
             return;
           }
           usingBluetooth = true;
         } else {
-          emit(state.copyWith(error: 'Bluetooth preferred but no device configured.', clearError: false));
+          emit(state.copyWith(
+              error: 'Bluetooth preferred but no device configured.',
+              clearError: false));
           emit(state.copyWith(clearError: true));
           return;
         }
       } else {
-        // Try WiFi (either as preferred or as 'none' lead option)
         final savedIp = HiveDatabase.settingsBox.get('printer_ip') as String?;
         if (savedIp != null && savedIp.isNotEmpty) {
           final connected = await wifiHelper.connect(savedIp);
           if (connected) {
             usingBluetooth = false;
           } else if (preferredType == 'none') {
-            // Fallback to Bluetooth ONLY if mode is 'none'
-            final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+            final savedBtAddr =
+                HiveDatabase.settingsBox.get('printer_bt_address') as String?;
             if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
               final device = BluetoothDevice(address: savedBtAddr);
               final connectedBt = await btHelper.connect(device);
               if (connectedBt) {
                 usingBluetooth = true;
               } else {
-                emit(state.copyWith(error: 'Failed to auto-connect to any printer!', clearError: false));
+                emit(state.copyWith(
+                    error: 'Failed to auto-connect to any printer!',
+                    clearError: false));
                 emit(state.copyWith(clearError: true));
                 return;
               }
             } else {
-              emit(state.copyWith(error: 'Wi-Fi connection failed and no Bluetooth configured.', clearError: false));
+              emit(state.copyWith(
+                  error: 'Wi-Fi connection failed and no Bluetooth configured.',
+                  clearError: false));
               emit(state.copyWith(clearError: true));
               return;
             }
           } else {
-            // Preferred WiFi failed
-            emit(state.copyWith(error: 'Failed to connect to preferred Wi-Fi printer!', clearError: false));
+            emit(state.copyWith(
+                error: 'Failed to connect to preferred Wi-Fi printer!',
+                clearError: false));
             emit(state.copyWith(clearError: true));
             return;
           }
         } else if (preferredType == 'none') {
-          // No IP, try BT fallback
-          final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+          final savedBtAddr =
+              HiveDatabase.settingsBox.get('printer_bt_address') as String?;
           if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
-             final device = BluetoothDevice(address: savedBtAddr);
-             final connected = await btHelper.connect(device);
-             if (connected) {
-               usingBluetooth = true;
-             } else {
-               emit(state.copyWith(error: 'Failed to connect to Bluetooth printer!', clearError: false));
-               emit(state.copyWith(clearError: true));
-               return;
-             }
+            final device = BluetoothDevice(address: savedBtAddr);
+            final connected = await btHelper.connect(device);
+            if (connected) {
+              usingBluetooth = true;
+            } else {
+              emit(state.copyWith(
+                  error: 'Failed to connect to Bluetooth printer!',
+                  clearError: false));
+              emit(state.copyWith(clearError: true));
+              return;
+            }
           } else {
-             emit(state.copyWith(error: 'No printer configured.', clearError: false));
-             emit(state.copyWith(clearError: true));
-             return;
+            emit(state.copyWith(
+                error: 'No printer configured.', clearError: false));
+            emit(state.copyWith(clearError: true));
+            return;
           }
         } else {
-          emit(state.copyWith(error: 'Preferred Wi-Fi not configured.', clearError: false));
+          emit(state.copyWith(
+              error: 'Preferred Wi-Fi not configured.', clearError: false));
           emit(state.copyWith(clearError: true));
           return;
         }
       }
     } else {
-      // Already connected somewhere
       usingBluetooth = btHelper.isConnected;
     }
 
-    // ── Step 2: print ─────────────────────────────────────────────────────
     emit(state.copyWith(
         isPrinting: true, printSuccess: false, clearError: true));
 
@@ -268,37 +270,37 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
         emit(state.copyWith(clearError: true));
       },
       (sales) async {
-        if (sales.isEmpty) {
+        // Only include non-voided sales
+        final activeSales = sales.where((s) => !s.voided).toList();
+
+        if (activeSales.isEmpty) {
           emit(state.copyWith(
               isPrinting: false,
-              error: 'No sales recorded today to close the batch.',
+              error: 'No active sales recorded today.',
               clearError: false));
           emit(state.copyWith(clearError: true));
           return;
         }
 
         double grandTotal = 0;
-        for (var sale in sales) {
+        for (var sale in activeSales) {
           grandTotal += sale.total;
         }
 
         final wifiHelper = PrinterHelper();
         final btHelper = BluetoothPrinterHelper();
         bool usingBluetooth = false;
-        final String preferredType = HiveDatabase.settingsBox.get('preferred_printer_type') ?? 'none';
+        final String preferredType =
+            HiveDatabase.settingsBox.get('preferred_printer_type') ?? 'none';
 
         if (!wifiHelper.isConnected && !btHelper.isConnected) {
           if (preferredType == 'bluetooth') {
-            final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+            final savedBtAddr =
+                HiveDatabase.settingsBox.get('printer_bt_address') as String?;
             if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
               final device = BluetoothDevice(address: savedBtAddr);
               final connected = await btHelper.connect(device);
-              if (!connected) {
-                emit(state.copyWith(error: 'Failed to connect to Bluetooth printer for Z-Report', clearError: false));
-                emit(state.copyWith(clearError: true));
-                return;
-              }
-              usingBluetooth = true;
+              if (connected) usingBluetooth = true;
             }
           } else {
             final savedIp = HiveDatabase.settingsBox.get('printer_ip') as String?;
@@ -307,32 +309,25 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
               if (connected) {
                 usingBluetooth = false;
               } else if (preferredType == 'none') {
-                final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
+                final savedBtAddr =
+                    HiveDatabase.settingsBox.get('printer_bt_address') as String?;
                 if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
                   final device = BluetoothDevice(address: savedBtAddr);
                   final connectedBt = await btHelper.connect(device);
                   if (connectedBt) usingBluetooth = true;
                 }
               }
-            } else if (preferredType == 'none') {
-               final savedBtAddr = HiveDatabase.settingsBox.get('printer_bt_address') as String?;
-               if (savedBtAddr != null && savedBtAddr.isNotEmpty) {
-                  final device = BluetoothDevice(address: savedBtAddr);
-                  final connected = await btHelper.connect(device);
-                  if (connected) usingBluetooth = true;
-               }
             }
           }
         } else {
-           usingBluetooth = btHelper.isConnected;
+          usingBluetooth = btHelper.isConnected;
         }
 
         try {
-          // Format the Z Report mimicking a receipt but replacing item list with summary
           final items = [
             {
               'name': 'TOTAL TRANSACTIONS',
-              'qty': sales.length,
+              'qty': activeSales.length,
               'price': 0.0,
               'total': 0.0,
             },
@@ -374,7 +369,6 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
               footer: receiptArgs.footer,
             );
           }
-
           emit(state.copyWith(isPrinting: false, printSuccess: true));
         } catch (e) {
           emit(state.copyWith(
@@ -382,6 +376,30 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           emit(state.copyWith(clearError: true));
         }
       },
+    );
+  }
+
+  Future<void> _onLoadDailySales(
+      LoadDailySalesEvent event, Emitter<BillingState> emit) async {
+    emit(state.copyWith(isDailySalesLoading: true));
+    final result = await getDailySalesUseCase(event.date);
+    result.fold(
+      (failure) => emit(state.copyWith(
+          isDailySalesLoading: false, error: failure.message)),
+      (sales) => emit(state.copyWith(isDailySalesLoading: false, dailySales: sales)),
+    );
+  }
+
+  Future<void> _onVoidSale(
+      VoidSaleEvent event, Emitter<BillingState> emit) async {
+    if (voidSaleUseCase == null) return;
+    
+    emit(state.copyWith(isDailySalesLoading: true));
+    final result = await voidSaleUseCase!(event.saleId);
+    result.fold(
+      (failure) => emit(state.copyWith(
+          isDailySalesLoading: false, error: failure.message)),
+      (_) => add(LoadDailySalesEvent(DateTime.now())),
     );
   }
 }

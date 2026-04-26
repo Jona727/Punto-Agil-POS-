@@ -20,19 +20,22 @@ class SaleModelAdapter extends TypeAdapter<SaleModel> {
       id: fields[0] as String,
       date: fields[1] as DateTime,
       total: fields[2] as double,
+      voided: fields[3] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, SaleModel obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.date)
       ..writeByte(2)
-      ..write(obj.total);
+      ..write(obj.total)
+      ..writeByte(3)
+      ..write(obj.voided);
   }
 
   @override

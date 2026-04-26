@@ -43,6 +43,16 @@ Future<void> init() async {
     ),
   );
 
+  // Features - Billing
+  sl.registerFactory(
+    () => BillingBloc(
+      getProductByBarcodeUseCase: sl(),
+      saveSaleUseCase: sl(),
+      getDailySalesUseCase: sl(),
+      voidSaleUseCase: sl(),
+    ),
+  );
+
   // Use cases
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
   sl.registerLazySingleton(() => AddProductUseCase(sl()));
@@ -51,38 +61,28 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetProductByBarcodeUseCase(sl()));
   sl.registerLazySingleton(() => UpdatePricesMassivelyUseCase(sl()));
 
-  // Repository
-  sl.registerLazySingleton<ProductRepository>(
-    () => ProductRepositoryImpl(),
-  );
-
-// Features - Billing
-  sl.registerFactory(
-    () => BillingBloc(
-      getProductByBarcodeUseCase: sl(),
-      saveSaleUseCase: sl(),
-      getDailySalesUseCase: sl(), // Add this param to the bloc instance
-    ),
-  );
-
   // Features - Shop
   // Use cases
   sl.registerLazySingleton(() => GetShopUseCase(sl()));
   sl.registerLazySingleton(() => UpdateShopUseCase(sl()));
 
-  // Repository
+  // Features - Billing (Sales)
+  sl.registerLazySingleton(() => SaveSaleUseCase(sl()));
+  sl.registerLazySingleton(() => GetDailySalesUseCase(sl()));
+  sl.registerLazySingleton(() => VoidSaleUseCase(sl()));
+
+  // Repositories
+  sl.registerLazySingleton<ProductRepository>(
+    () => ProductRepositoryImpl(),
+  );
+
   sl.registerLazySingleton<ShopRepository>(
     () => ShopRepositoryImpl(),
   );
 
-  // Features - Settings / Printer
   sl.registerLazySingleton<PrinterRepository>(
     () => PrinterRepositoryImpl(),
   );
-
-  // Features - Billing (Sales)
-  sl.registerLazySingleton(() => SaveSaleUseCase(sl()));
-  sl.registerLazySingleton(() => GetDailySalesUseCase(sl()));
 
   sl.registerLazySingleton<SaleRepository>(
     () => SaleRepositoryImpl(),

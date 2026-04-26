@@ -113,22 +113,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   icon: Icons.receipt_long,
                   title: 'Print Z Report',
                   subtitle: 'Daily summary of sales',
-                  onTap: () {
-                    final shopState = context.read<ShopBloc>().state;
-                    String shopName = 'Elite Groceries';
-                    if (shopState is ShopLoaded &&
-                        shopState.shop.name.isNotEmpty) {
-                      shopName = shopState.shop.name;
-                    }
-
-                    context
-                        .read<BillingBloc>()
-                        .add(PrintZReportEvent(shopName: shopName));
-
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Printing Z Report...'),
-                        backgroundColor: Colors.blue));
-                  },
+                  onTap: () => context.push('/settings/z-report'),
                 ),
                 _buildDivider(),
                 _buildListItem(

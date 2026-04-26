@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:intl/intl.dart';
 import 'printer_helper.dart'; // reuse EscPos constants
 
 class BluetoothPrinterHelper {
@@ -66,9 +67,6 @@ class BluetoothPrinterHelper {
   }) async {
     if (!isConnected) return;
 
-    // Delegate receipt building to a shared helper so both WiFi & BT use
-    // identical formatting. We construct the ESC/POS bytes manually here,
-    // mirroring the logic in PrinterHelper.
     List<int> bytes = [];
 
     bytes += EscPos.init;
@@ -90,6 +88,12 @@ class BluetoothPrinterHelper {
       bytes += EscPos.lineFeed;
     }
     bytes += phone.codeUnits;
+    bytes += EscPos.lineFeed;
+
+    // Argentina time (UTC-3)
+    final now = DateTime.now().toUtc().subtract(const Duration(hours: 3));
+    String formattedDate = DateFormat('dd-MM-yyyy hh:mm a').format(now);
+    bytes += formattedDate.codeUnits;
     bytes += EscPos.lineFeed;
 
     bytes += '--------------------------------'.codeUnits;
@@ -126,6 +130,7 @@ class BluetoothPrinterHelper {
 
     bytes += EscPos.alignCenter;
     bytes += footer.codeUnits;
+    bytes += EscPos.lineFeed;
     bytes += EscPos.lineFeed;
     bytes += EscPos.lineFeed;
     bytes += EscPos.lineFeed;
