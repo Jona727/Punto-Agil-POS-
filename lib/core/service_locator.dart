@@ -1,4 +1,10 @@
 import 'package:get_it/get_it.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'config/app_config.dart';
+import '../../features/sync/data/hive_sync_storage.dart';
+import '../../features/sync/data/supabase_remote_sync_source.dart';
+import '../../features/sync/domain/sync_models.dart';
+import '../../features/sync/domain/sync_service.dart';
 import '../../features/auth/data/repositories/supabase_auth_repository.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
@@ -21,6 +27,19 @@ import '../../features/billing/presentation/bloc/billing_bloc.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  // Sincronización con la nube: solo existe si la app tiene Supabase configurado.
+  if (AppConfig.isSupabaseConfigured) {
+    sl.registerLazySingleton(() => SyncService(
+          outbox: HiveSyncOutbox(),
+          local: HiveLocalSyncStore(),
+          remote: SupabaseRemoteSyncSource(Supabase.instance.client),
+          settings: HiveSyncSettings(),
+        ));
+    sl.registerLazySingleton<SyncRecorder>(() => sl<SyncService>());
+  } else {
+    sl.registerLazySingleton<SyncRecorder>(() => const NoopSyncRecorder());
+  }
+
   // Features - Auth (singleton: el router y las pantallas comparten el estado)
   sl.registerLazySingleton<AuthRepository>(() => SupabaseAuthRepository());
   sl.registerLazySingleton(() => AuthBloc(repository: sl()));
@@ -80,11 +99,11 @@ Future<void> init() async {
 
   // Repositories
   sl.registerLazySingleton<ProductRepository>(
-    () => ProductRepositoryImpl(),
+    () => ProductRepositoryImpl(sync: sl()),
   );
 
   sl.registerLazySingleton<ShopRepository>(
-    () => ShopRepositoryImpl(),
+    () => ShopRepositoryImpl(sync: sl()),
   );
 
   sl.registerLazySingleton<PrinterRepository>(
@@ -92,6 +111,6 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<SaleRepository>(
-    () => SaleRepositoryImpl(),
+    () => SaleRepositoryImpl(sync: sl()),
   );
 }

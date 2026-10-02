@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'config/routes/app_routes.dart';
 import 'core/config/app_config.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/sync/domain/sync_service.dart';
 import 'core/data/hive_database.dart';
 import 'core/service_locator.dart' as di;
 import 'core/theme/app_theme.dart';
@@ -51,12 +54,68 @@ class _MyAppState extends State<MyApp> {
         BlocProvider<PrinterBloc>(
             create: (context) => di.sl<PrinterBloc>()..add(InitPrinterEvent())),
       ],
-      child: MaterialApp.router(
-        title: 'Cobrá',
-        theme: AppTheme.lightTheme,
-        routerConfig: _router,
-        debugShowCheckedModeBanner: false,
+      child: _SyncBridge(
+        child: MaterialApp.router(
+          title: 'Cobrá',
+          theme: AppTheme.lightTheme,
+          routerConfig: _router,
+          debugShowCheckedModeBanner: false,
+        ),
       ),
     );
   }
+}
+
+/// Conecta la sesión con la sincronización:
+/// - al haber sesión iniciada, arranca la sincronización con esa cuenta;
+/// - cuando la nube trae cambios, recarga productos y datos del negocio.
+class _SyncBridge extends StatefulWidget {
+  final Widget child;
+  const _SyncBridge({required this.child});
+
+  @override
+  State<_SyncBridge> createState() => _SyncBridgeState();
+}
+
+class _SyncBridgeState extends State<_SyncBridge> {
+  StreamSubscription<void>? _changes;
+  StreamSubscription<AuthState>? _auth;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!di.sl.isRegistered<SyncService>()) return; // app sin Supabase
+
+    final sync = di.sl<SyncService>();
+    final authBloc = context.read<AuthBloc>();
+
+    _changes = sync.dataChanges.listen((_) {
+      if (!mounted) return;
+      context.read<ProductBloc>().add(LoadProducts());
+      context.read<ShopBloc>().add(LoadShopEvent());
+    });
+
+    void onAuth(AuthState s) {
+      if (s.status == AuthStatus.authenticated && s.user != null) {
+        unawaited(sync.onSignedIn(s.user!.id));
+      } else {
+        sync.onSignedOut();
+      }
+    }
+
+    onAuth(authBloc.state);
+    _auth = authBloc.stream
+        .distinct((a, b) => a.status == b.status && a.user == b.user)
+        .listen(onAuth);
+  }
+
+  @override
+  void dispose() {
+    _changes?.cancel();
+    _auth?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

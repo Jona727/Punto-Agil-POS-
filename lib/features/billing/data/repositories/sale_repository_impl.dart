@@ -1,4 +1,5 @@
 import 'package:fpdart/fpdart.dart';
+import '../../../sync/domain/sync_models.dart';
 import '../../../../core/data/hive_database.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/sale.dart';
@@ -6,12 +7,17 @@ import '../../domain/repositories/sale_repository.dart';
 import '../models/sale_model.dart';
 
 class SaleRepositoryImpl implements SaleRepository {
+  SaleRepositoryImpl({this.sync = const NoopSyncRecorder()});
+
+  final SyncRecorder sync;
+
   @override
   Future<Either<Failure, void>> saveSale(Sale sale) async {
     try {
       final box = HiveDatabase.salesBox;
       final model = SaleModel.fromEntity(sale);
       await box.put(model.id, model);
+      await sync.record(SyncKind.sale, model.id, SyncAction.upsert);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -48,6 +54,7 @@ class SaleRepositoryImpl implements SaleRepository {
           model.toEntity().copyWith(voided: true),
         );
         await box.put(saleId, updatedModel);
+        await sync.record(SyncKind.sale, saleId, SyncAction.upsert);
         return const Right(null);
       }
       return Left(CacheFailure('Venta no encontrada: $saleId'));

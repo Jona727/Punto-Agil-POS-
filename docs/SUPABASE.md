@@ -76,10 +76,36 @@ ponen las reglas RLS del paso 2.
 `supabase_flutter` necesita **Flutter 3.35 o más nuevo** (Dart 3.9+).
 Verificalo con `flutter --version` y actualizá con `flutter upgrade`.
 
-## Qué falta (próximas partes de la Fase 2)
-- Subir a la nube los productos, los datos del negocio y las ventas
-  (por ahora las cuentas existen, pero los datos siguen guardándose solo en el
-  teléfono).
-- Sincronizar sin perder ventas cuando no hay internet.
-- Al cambiar de cuenta en un mismo teléfono, separar los datos locales de cada
-  una.
+## Cómo funciona la sincronización
+- **El teléfono manda.** Cada cobro, producto o cambio del negocio se guarda
+  primero en el teléfono, así que **vender nunca depende de internet**.
+- Cada cambio se anota en una cola. Cuando hay sesión e internet, se sube solo
+  (al instante y cada minuto). Si algo se edita varias veces sin conexión, se
+  sube una sola vez con su último valor.
+- Después de subir lo pendiente, se baja lo que haya en la nube: productos y
+  datos del negocio. Las ventas se restauran cuando el teléfono está vacío
+  (cambio de celular).
+- **Primera vez:** lo que ya había en el teléfono (usándolo sin cuenta) se sube
+  a la cuenta nueva.
+- **Cerrar sesión:** primero se sube lo pendiente y después se borran los datos
+  del teléfono (quedan en la cuenta). Si no hay internet y quedan cambios sin
+  subir, la app avisa antes de borrarlos.
+- **Otra cuenta en el mismo teléfono:** nunca se mezclan los datos de dos
+  cuentas.
+- En Ajustes → Cuenta se ve el estado ("Todo sincronizado", "3 cambios por
+  subir", "Sin conexión") y se puede tocar para sincronizar ahora.
+
+### Límites conocidos (versión actual)
+- **Dos teléfonos editando lo mismo a la vez:** gana el último en subir. Está
+  pensado para un teléfono por comercio.
+- **Anular una venta desde otro teléfono** no se refleja en el primero (las
+  ventas solo se restauran en un teléfono vacío).
+- **Código de barras repetido:** si dos productos con el mismo código llegan a
+  la cuenta, el segundo es rechazado y la app lo muestra como "cambio que no
+  se pudo subir".
+- **El stock no se descuenta al vender** todavía (es una mejora aparte).
+
+## Probar sin gastar un proyecto de Supabase
+Ver `supabase/local_test/README.md`: levanta un PostgREST local y corre una
+prueba de integración que verifica consultas, seguridad por comercio y el
+recorrido completo entre dos teléfonos.

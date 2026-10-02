@@ -4,6 +4,9 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/app_config.dart';
+import '../../../../core/service_locator.dart' as di;
+import '../../../sync/domain/sync_models.dart';
+import '../../../sync/domain/sync_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
@@ -149,6 +152,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                   .read<AuthBloc>()
                                   .add(const AuthSignOutRequested()),
                     ),
+                    if (loggedIn && di.sl.isRegistered<SyncService>()) ...[
+                      _buildDivider(),
+                      _buildSyncItem(di.sl<SyncService>()),
+                    ],
                   ]);
                 },
               ),
@@ -579,13 +586,61 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Widget _buildSyncItem(SyncService sync) {
+    return ValueListenableBuilder<SyncState>(
+      valueListenable: sync.state,
+      builder: (context, st, _) {
+        String title;
+        String subtitle;
+        IconData icon = Icons.cloud_done_outlined;
+        if (st.syncing) {
+          title = 'Sincronizando…';
+          subtitle = 'Subiendo y bajando cambios';
+          icon = Icons.cloud_sync_outlined;
+        } else if (st.failed > 0) {
+          title = '${st.failed} cambio(s) no se pudieron subir';
+          subtitle = st.lastError ?? 'Tocá para reintentar';
+          icon = Icons.cloud_off_outlined;
+        } else if (st.offline) {
+          title = 'Sin conexión';
+          subtitle = st.pending > 0
+              ? '${st.pending} cambio(s) se subirán al volver internet'
+              : 'Tus datos están guardados en este teléfono';
+          icon = Icons.cloud_off_outlined;
+        } else if (st.pending > 0) {
+          title = '${st.pending} cambio(s) por subir';
+          subtitle = 'Tocá para sincronizar ahora';
+          icon = Icons.cloud_upload_outlined;
+        } else {
+          title = 'Todo sincronizado';
+          final at = st.lastSyncAt;
+          subtitle = at == null
+              ? 'Tus datos están respaldados en la nube'
+              : 'Última vez: ${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';
+        }
+        return _buildListItem(
+          icon: icon,
+          title: title,
+          subtitle: subtitle,
+          trailingIcon: Icons.refresh,
+          onTap: st.syncing ? null : () => sync.sync(),
+        );
+      },
+    );
+  }
+
   Future<void> _confirmSignOut(BuildContext context) async {
     final bloc = context.read<AuthBloc>();
+    final sync =
+        di.sl.isRegistered<SyncService>() ? di.sl<SyncService>() : null;
+
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Cerrar sesión'),
-        content: const Text('¿Seguro que querés cerrar sesión?'),
+        content: const Text(
+            '¿Seguro que querés cerrar sesión? Los datos de este teléfono se '
+            'borran; quedan guardados en tu cuenta.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -596,7 +651,36 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
-    if (ok == true) bloc.add(const AuthSignOutRequested());
+    if (ok != true) return;
+
+    if (sync != null) {
+      // Antes de borrar el teléfono, se sube todo lo pendiente.
+      final left = await sync.flush();
+      if (left > 0) {
+        if (!context.mounted) return;
+        final force = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Hay cambios sin subir'),
+            content: Text(
+                '$left cambio(s) todavía no se subieron a tu cuenta. Si cerrás '
+                'sesión ahora, se pierden. Conectate a internet y probá de nuevo.'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancelar')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Cerrar y perderlos',
+                      style: TextStyle(color: Colors.red))),
+            ],
+          ),
+        );
+        if (force != true) return;
+      }
+      await sync.clearLocalAndSignOut();
+    }
+    bloc.add(const AuthSignOutRequested());
   }
 
   Widget _buildListGroup({required List<Widget> children}) {

@@ -1,4 +1,5 @@
 import 'package:fpdart/fpdart.dart';
+import '../../../sync/domain/sync_models.dart';
 import '../../../../core/data/hive_database.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/product.dart';
@@ -6,6 +7,11 @@ import '../../domain/repositories/product_repository.dart';
 import '../models/product_model.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
+  ProductRepositoryImpl({this.sync = const NoopSyncRecorder()});
+
+  /// Avisa a la sincronización que algo cambió (no hace nada sin cuenta).
+  final SyncRecorder sync;
+
   @override
   Future<Either<Failure, List<Product>>> getProducts() async {
     try {
@@ -38,6 +44,7 @@ class ProductRepositoryImpl implements ProductRepository {
       // You can use add() or put()
       final model = ProductModel.fromEntity(product);
       await box.put(model.id, model); // Using ID as key
+      await sync.record(SyncKind.product, model.id, SyncAction.upsert);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -50,6 +57,7 @@ class ProductRepositoryImpl implements ProductRepository {
       final box = HiveDatabase.productBox;
       final model = ProductModel.fromEntity(product);
       await box.put(model.id, model);
+      await sync.record(SyncKind.product, model.id, SyncAction.upsert);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -61,6 +69,7 @@ class ProductRepositoryImpl implements ProductRepository {
     try {
       final box = HiveDatabase.productBox;
       await box.delete(id);
+      await sync.record(SyncKind.product, id, SyncAction.delete);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -90,6 +99,9 @@ class ProductRepositoryImpl implements ProductRepository {
       }
       
       await box.putAll(updatedMap);
+      for (final id in updatedMap.keys) {
+        await sync.record(SyncKind.product, id as String, SyncAction.upsert);
+      }
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

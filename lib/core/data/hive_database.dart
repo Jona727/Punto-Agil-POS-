@@ -9,6 +9,7 @@ class HiveDatabase {
   static const String shopBoxName = 'shop';
   static const String settingsBoxName = 'settings';
   static const String salesBoxName = 'sales';
+  static const String syncOutboxBoxName = 'sync_outbox';
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -24,6 +25,7 @@ class HiveDatabase {
     await Hive.openBox<ShopModel>(shopBoxName);
     await Hive.openBox(settingsBoxName); // Generic box for simple key-value
     await Hive.openBox<SaleModel>(salesBoxName);
+    await Hive.openBox(syncOutboxBoxName); // cola de cambios por subir a la nube
   }
 
   static Box<ProductModel> get productBox =>
