@@ -118,6 +118,36 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
 
   Future<void> _onPrintReceipt(
       PrintReceiptEvent event, Emitter<BillingState> emit) async {
+    if (state.cartItems.isEmpty) return;
+
+    // La venta se registra primero y una sola vez: si la impresora falla,
+    // la venta no se pierde y al reintentar no se duplica.
+    if (state.savedSaleId == null) {
+      final sale = Sale(
+        id: const Uuid().v4(),
+        date: DateTime.now(),
+        total: state.totalAmount,
+        items: state.cartItems
+            .map((item) => SaleItem(
+                  productId: item.product.id,
+                  name: item.product.name,
+                  barcode: item.product.barcode,
+                  unitPrice: item.product.price,
+                  quantity: item.quantity,
+                ))
+            .toList(),
+      );
+      final saved = await saveSaleUseCase(sale);
+      final failed = saved.isLeft();
+      if (failed) {
+        emit(state.copyWith(
+            error: 'No se pudo guardar la venta', clearError: false));
+        emit(state.copyWith(clearError: true));
+        return;
+      }
+      emit(state.copyWith(savedSaleId: sale.id));
+    }
+
     final wifiHelper = PrinterHelper();
     final btHelper = BluetoothPrinterHelper();
     bool usingBluetooth = false;
@@ -237,22 +267,6 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
             total: state.totalAmount,
             footer: event.footer);
       }
-
-      final sale = Sale(
-        id: const Uuid().v4(),
-        date: DateTime.now(),
-        total: state.totalAmount,
-        items: state.cartItems
-            .map((item) => SaleItem(
-                  productId: item.product.id,
-                  name: item.product.name,
-                  barcode: item.product.barcode,
-                  unitPrice: item.product.price,
-                  quantity: item.quantity,
-                ))
-            .toList(),
-      );
-      await saveSaleUseCase(sale);
 
       emit(state.copyWith(isPrinting: false, printSuccess: true));
     } catch (e) {
