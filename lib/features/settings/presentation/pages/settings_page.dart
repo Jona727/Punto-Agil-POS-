@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/config/app_config.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../bloc/printer_bloc.dart';
@@ -51,7 +53,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: BlocBuilder<ShopBloc, ShopState>(
                 builder: (context, state) {
                   String shopName = 'Mi Negocio';
-                  String initials = 'EG';
+                  String initials = 'MN';
                   if (state is ShopLoaded && state.shop.name.isNotEmpty) {
                     shopName = state.shop.name;
                     final parts = shopName.split(' ');
@@ -139,6 +141,34 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
+
+            if (AppConfig.isSupabaseConfigured) ...[
+              const SizedBox(height: 24),
+              _buildSectionHeader('Cuenta'),
+              BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, auth) {
+                  final loggedIn = auth.status == AuthStatus.authenticated;
+                  return _buildListGroup(children: [
+                    _buildListItem(
+                      icon: loggedIn ? Icons.person : Icons.person_outline,
+                      title: loggedIn
+                          ? (auth.user?.email ?? 'Mi cuenta')
+                          : 'Estás usando Cobrá sin cuenta',
+                      subtitle: loggedIn
+                          ? 'Cerrar sesión'
+                          : 'Creá una cuenta o ingresá para respaldar tus datos',
+                      onTap: auth.isLoading
+                          ? null
+                          : () => loggedIn
+                              ? _confirmSignOut(context)
+                              : context
+                                  .read<AuthBloc>()
+                                  .add(const AuthSignOutRequested()),
+                    ),
+                  ]);
+                },
+              ),
+            ],
 
             const SizedBox(height: 24),
 
@@ -563,6 +593,26 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final bloc = context.read<AuthBloc>();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cerrar sesión'),
+        content: const Text('¿Seguro que querés cerrar sesión?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Cerrar sesión')),
+        ],
+      ),
+    );
+    if (ok == true) bloc.add(const AuthSignOutRequested());
   }
 
   Widget _buildListGroup({required List<Widget> children}) {

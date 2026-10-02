@@ -21,6 +21,11 @@ This application serves as a complete offline POS system for small to medium-siz
 - **Shop Settings & Customization**: Centrally managed shop details printed dynamically on receipts.
 - **Offline-First Architecture**: Powered by `Hive` for lightning-fast localized NoSQL data storage. No active internet connectivity required for the core flow.
 
+### ☁️ Cuentas y nube (opcional)
+La app funciona completamente local. Para activar cuentas de usuario con
+Supabase seguí la guía en [`docs/SUPABASE.md`](docs/SUPABASE.md).
+Requiere Flutter 3.35 o más nuevo.
+
 ## 🛠 Tech Stack & Architecture
 
 Built leveraging industry-standard architectural principles (Clean Architecture & Feature-Driven Design) ensuring scalability, separation of concerns, and robust testability. 

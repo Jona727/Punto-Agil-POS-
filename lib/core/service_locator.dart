@@ -1,4 +1,7 @@
 import 'package:get_it/get_it.dart';
+import '../../features/auth/data/repositories/supabase_auth_repository.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/product/data/repositories/product_repository_impl.dart';
 import '../../features/product/domain/repositories/product_repository.dart';
 import '../../features/product/domain/usecases/product_usecases.dart';
@@ -18,6 +21,10 @@ import '../../features/billing/presentation/bloc/billing_bloc.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  // Features - Auth (singleton: el router y las pantallas comparten el estado)
+  sl.registerLazySingleton<AuthRepository>(() => SupabaseAuthRepository());
+  sl.registerLazySingleton(() => AuthBloc(repository: sl()));
+
   // Features - Product
   // Bloc
   sl.registerFactory(
