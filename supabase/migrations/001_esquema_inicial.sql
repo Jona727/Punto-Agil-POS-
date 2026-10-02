@@ -144,3 +144,21 @@ create trigger businesses_updated before update on public.businesses
   for each row execute function public.tocar_updated_at();
 create trigger products_updated before update on public.products
   for each row execute function public.tocar_updated_at();
+
+-- ───────────── Permisos de acceso desde la app (Data API) ─────────────
+-- Se declaran explícitos para no depender de los permisos por defecto de
+-- Supabase, que pueden cambiar. Solo usuarios con sesión (authenticated) tocan
+-- las tablas, y aun así las reglas RLS limitan cada fila a su comercio.
+
+grant usage on schema public to authenticated;
+grant select, update on public.businesses to authenticated;
+grant select, insert, update, delete on public.products   to authenticated;
+grant select, insert, update, delete on public.sales      to authenticated;
+grant select, insert, update, delete on public.sale_items to authenticated;
+
+-- Las funciones se crean ejecutables por todos; se restringen a usuarios con sesión.
+revoke execute on function public.my_business_ids() from public, anon;
+grant  execute on function public.my_business_ids() to authenticated;
+
+-- Sin sesión (anon) no se accede a nada.
+revoke all on public.businesses, public.products, public.sales, public.sale_items from anon;

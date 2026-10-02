@@ -12,9 +12,6 @@ Requisitos: PostgreSQL 14+, el binario de PostgREST 12 y Python 3.
 createdb cobra_test
 psql cobra_test -f supabase/local_test/setup.sql
 psql cobra_test -f supabase/migrations/001_esquema_inicial.sql
-psql cobra_test -c "grant usage on schema public to anon, authenticated;
-  grant select, insert, update, delete on all tables in schema public to authenticated;
-  grant execute on all functions in schema public to authenticated;"
 
 # Dos usuarios de prueba (el trigger les crea su comercio)
 psql cobra_test -c "insert into auth.users (id, email) values

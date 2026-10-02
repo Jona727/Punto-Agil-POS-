@@ -14,7 +14,3 @@ do $$ begin
 end $$;
 grant anon, authenticated to authenticator;
 grant usage on schema auth to authenticated;
--- Ejecutar DESPUÉS de aplicar supabase/migrations/001_esquema_inicial.sql:
---   grant usage on schema public to anon, authenticated;
---   grant select, insert, update, delete on all tables in schema public to authenticated;
---   grant execute on all functions in schema public to authenticated;
