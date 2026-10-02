@@ -1,27 +1,34 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failure.dart';
-import '../../../../core/usecase/usecase.dart';
 import '../entities/sale.dart';
 import '../repositories/sale_repository.dart';
 
-class SaveSaleUseCase implements UseCase<void, Sale> {
+class SaveSaleUseCase {
   final SaleRepository repository;
 
   SaveSaleUseCase(this.repository);
 
-  @override
-  Future<Either<Failure, void>> call(Sale params) {
-    return repository.saveSale(params);
+  Future<Either<Failure, void>> call(Sale sale) async {
+    return await repository.saveSale(sale);
   }
 }
 
-class GetDailySalesUseCase implements UseCase<List<Sale>, DateTime> {
+class GetDailySalesUseCase {
   final SaleRepository repository;
 
   GetDailySalesUseCase(this.repository);
 
-  @override
-  Future<Either<Failure, List<Sale>>> call(DateTime params) {
-    return repository.getSalesByDate(params);
+  Future<Either<Failure, List<Sale>>> call(DateTime date) async {
+    return await repository.getSalesByDate(date);
+  }
+}
+
+class VoidSaleUseCase {
+  final SaleRepository repository;
+
+  VoidSaleUseCase(this.repository);
+
+  Future<Either<Failure, void>> call(String saleId) async {
+    return await repository.voidSale(saleId);
   }
 }

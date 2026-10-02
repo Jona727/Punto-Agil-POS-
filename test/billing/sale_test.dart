@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:cobra/core/data/hive_database.dart';
 import 'package:cobra/features/billing/data/models/sale_item_model.dart';
+import 'package:cobra/features/billing/data/repositories/sale_repository_impl.dart';
 import 'package:cobra/features/billing/data/models/sale_model.dart';
 import 'package:cobra/features/billing/domain/entities/sale.dart';
 import 'package:cobra/features/billing/domain/entities/sale_item.dart';
@@ -75,6 +77,27 @@ void main() {
       expect(loaded.voided, isTrue);
       expect(loaded.total, 5800);
       expect(loaded.items, items);
+    });
+
+    test('anular una venta conserva sus productos', () async {
+      await Hive.openBox<SaleModel>(HiveDatabase.salesBoxName);
+      final repo = SaleRepositoryImpl();
+      await repo.saveSale(sale);
+
+      final result = await repo.voidSale(sale.id);
+      expect(result.isRight(), isTrue);
+
+      final loaded =
+          (await repo.getSalesByDate(sale.date)).getOrElse((_) => []).single;
+      expect(loaded.voided, isTrue);
+      expect(loaded.items, items);
+      expect(loaded.total, 5800);
+    });
+
+    test('anular una venta inexistente devuelve error', () async {
+      await Hive.openBox<SaleModel>(HiveDatabase.salesBoxName);
+      final result = await SaleRepositoryImpl().voidSale('no-existe');
+      expect(result.isLeft(), isTrue);
     });
   });
 }

@@ -7,7 +7,6 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
-import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../bloc/printer_bloc.dart';
 import '../bloc/printer_event.dart';
 import '../bloc/printer_state.dart';
@@ -113,24 +112,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildDivider(),
                 _buildListItem(
                   icon: Icons.receipt_long,
-                  title: 'Imprimir cierre Z',
+                  title: 'Cierre Z',
                   subtitle: 'Resumen de ventas del día',
-                  onTap: () {
-                    final shopState = context.read<ShopBloc>().state;
-                    String shopName = 'Mi Negocio';
-                    if (shopState is ShopLoaded &&
-                        shopState.shop.name.isNotEmpty) {
-                      shopName = shopState.shop.name;
-                    }
-
-                    context
-                        .read<BillingBloc>()
-                        .add(PrintZReportEvent(shopName: shopName));
-
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Imprimiendo cierre Z...'),
-                        backgroundColor: Colors.blue));
-                  },
+                  onTap: () => context.push('/settings/z-report'),
                 ),
                 _buildDivider(),
                 _buildListItem(

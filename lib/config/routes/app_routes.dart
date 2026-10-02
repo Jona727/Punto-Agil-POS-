@@ -14,6 +14,7 @@ import '../../features/shop/presentation/pages/shop_details_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/billing/presentation/pages/scanner_page.dart';
 import '../../features/billing/presentation/pages/checkout_page.dart';
+import '../../features/billing/presentation/pages/z_report_page.dart';
 import '../../features/product/domain/entities/product.dart';
 
 /// Avisa al router cada vez que cambia el estado de autenticación.
@@ -75,6 +76,12 @@ GoRouter createRouter(AuthBloc authBloc) => GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsPage(),
+      routes: [
+        GoRoute(
+          path: 'z-report',
+          builder: (context, state) => const ZReportPage(),
+        ),
+      ],
     ),
     GoRoute(
       path: '/products',
@@ -89,7 +96,6 @@ GoRouter createRouter(AuthBloc authBloc) => GoRouter(
           builder: (context, state) {
             final product = state.extra as Product?;
             if (product == null) {
-              // If we land here without extra (e.g. deep link), go back to products for now.
               return const ProductListPage();
             }
             return EditProductPage(product: product);

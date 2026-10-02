@@ -22,13 +22,15 @@ class SaleRepositoryImpl implements SaleRepository {
   Future<Either<Failure, List<Sale>>> getSalesByDate(DateTime date) async {
     try {
       final box = HiveDatabase.salesBox;
-      final sales = box.values.where((sale) {
-        // Mismo día, mes y año
-        return sale.date.year == date.year &&
-            sale.date.month == date.month &&
-            sale.date.day == date.day;
-      }).map((model) => model.toEntity()).toList();
-      
+      final sales = box.values
+          .where((model) {
+            return model.date.year == date.year &&
+                model.date.month == date.month &&
+                model.date.day == date.day;
+          })
+          .map((model) => model.toEntity())
+          .toList();
+
       return Right(sales);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -39,8 +41,16 @@ class SaleRepositoryImpl implements SaleRepository {
   Future<Either<Failure, void>> voidSale(String saleId) async {
     try {
       final box = HiveDatabase.salesBox;
-      await box.delete(saleId);
-      return const Right(null);
+      final model = box.get(saleId);
+      if (model != null) {
+        // Se conserva todo (incluido el detalle de productos); solo cambia el estado.
+        final updatedModel = SaleModel.fromEntity(
+          model.toEntity().copyWith(voided: true),
+        );
+        await box.put(saleId, updatedModel);
+        return const Right(null);
+      }
+      return Left(CacheFailure('Venta no encontrada: $saleId'));
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }

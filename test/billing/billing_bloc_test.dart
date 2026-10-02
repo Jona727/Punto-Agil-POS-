@@ -41,8 +41,12 @@ class FakeSaleRepository implements SaleRepository {
       Right(saved);
 
   @override
-  Future<Either<Failure, void>> voidSale(String saleId) async =>
-      const Right(null);
+  Future<Either<Failure, void>> voidSale(String saleId) async {
+    final i = saved.indexWhere((s) => s.id == saleId);
+    if (i < 0) return const Left(CacheFailure('Venta no encontrada'));
+    saved[i] = saved[i].copyWith(voided: true);
+    return const Right(null);
+  }
 }
 
 void main() {
@@ -61,6 +65,7 @@ void main() {
           FakeProductRepository({'111': yerba, '222': galletitas})),
       saveSaleUseCase: SaveSaleUseCase(saleRepo),
       getDailySalesUseCase: GetDailySalesUseCase(saleRepo),
+      voidSaleUseCase: VoidSaleUseCase(saleRepo),
     );
   });
 
@@ -204,6 +209,39 @@ void main() {
 
       expect(saleRepo.saved.length, 2);
       expect(saleRepo.saved.first.id, isNot(saleRepo.saved.last.id));
+    });
+  });
+
+  group('ventas del día y anulación', () {
+    Sale venta(String id, double total) =>
+        Sale(id: id, date: DateTime.now(), total: total);
+
+    test('carga las ventas del día', () async {
+      saleRepo.saved.addAll([venta('a', 100), venta('b', 250)]);
+      bloc.add(LoadDailySalesEvent(DateTime.now()));
+      await settle();
+
+      expect(bloc.state.dailySales.length, 2);
+      expect(bloc.state.isDailySalesLoading, isFalse);
+    });
+
+    test('anular una venta la marca y recarga la lista', () async {
+      saleRepo.saved.addAll([venta('a', 100), venta('b', 250)]);
+      bloc.add(const VoidSaleEvent('a'));
+      await settle();
+
+      final a = bloc.state.dailySales.firstWhere((s) => s.id == 'a');
+      final b = bloc.state.dailySales.firstWhere((s) => s.id == 'b');
+      expect(a.voided, isTrue);
+      expect(b.voided, isFalse);
+    });
+
+    test('anular una venta inexistente informa el error', () async {
+      bloc.add(const VoidSaleEvent('nada'));
+      await settle();
+
+      expect(bloc.state.error, isNotNull);
+      expect(bloc.state.isDailySalesLoading, isFalse);
     });
   });
 }
