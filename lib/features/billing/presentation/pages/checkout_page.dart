@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:billing_app/core/widgets/primary_button.dart';
+import 'package:cobra/core/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -79,17 +79,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
             builder: (context, billingState) {
               return BlocBuilder<ShopBloc, ShopState>(
                   builder: (context, shopState) {
-                String upiId = '';
+                String paymentAlias = '';
                 String shopName = 'Shop';
 
                 if (shopState is ShopLoaded) {
-                  upiId = shopState.shop.upiId;
+                  paymentAlias = shopState.shop.paymentAlias;
                   shopName = shopState.shop.name;
                 }
 
                 // Build MercadoPago deep-link (offline-safe: URL is generated locally)
-                final mpUrl = upiId.isNotEmpty
-                    ? 'https://link.mercadopago.com.ar/$upiId'
+                final mpUrl = paymentAlias.isNotEmpty
+                    ? 'https://link.mercadopago.com.ar/$paymentAlias'
                     : '';
 
                 return Column(
@@ -207,7 +207,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        upiId,
+                                        paymentAlias,
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: Colors.grey[500],

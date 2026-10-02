@@ -21,7 +21,7 @@ class ShopModelAdapter extends TypeAdapter<ShopModel> {
       addressLine1: fields[1] as String,
       addressLine2: fields[2] as String,
       phoneNumber: fields[3] as String,
-      upiId: fields[4] as String,
+      paymentAlias: fields[4] as String,
       footerText: fields[5] as String,
     );
   }
@@ -39,7 +39,7 @@ class ShopModelAdapter extends TypeAdapter<ShopModel> {
       ..writeByte(3)
       ..write(obj.phoneNumber)
       ..writeByte(4)
-      ..write(obj.upiId)
+      ..write(obj.paymentAlias)
       ..writeByte(5)
       ..write(obj.footerText);
   }

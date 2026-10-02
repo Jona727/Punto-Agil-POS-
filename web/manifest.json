@@ -1,6 +1,6 @@
 {
-    "name": "billing_app",
-    "short_name": "billing_app",
+    "name": "Cobrá",
+    "short_name": "Cobrá",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -5,7 +5,7 @@ class Shop extends Equatable {
   final String addressLine1;
   final String addressLine2;
   final String phoneNumber;
-  final String upiId;
+  final String paymentAlias;
   final String footerText;
 
   const Shop({
@@ -13,7 +13,7 @@ class Shop extends Equatable {
     this.addressLine1 = '',
     this.addressLine2 = '',
     this.phoneNumber = '',
-    this.upiId = '',
+    this.paymentAlias = '',
     this.footerText = '',
   });
 
@@ -22,7 +22,7 @@ class Shop extends Equatable {
     String? addressLine1,
     String? addressLine2,
     String? phoneNumber,
-    String? upiId,
+    String? paymentAlias,
     String? footerText,
   }) {
     return Shop(
@@ -30,12 +30,12 @@ class Shop extends Equatable {
       addressLine1: addressLine1 ?? this.addressLine1,
       addressLine2: addressLine2 ?? this.addressLine2,
       phoneNumber: phoneNumber ?? this.phoneNumber,
-      upiId: upiId ?? this.upiId,
+      paymentAlias: paymentAlias ?? this.paymentAlias,
       footerText: footerText ?? this.footerText,
     );
   }
 
   @override
   List<Object?> get props =>
-      [name, addressLine1, addressLine2, phoneNumber, upiId, footerText];
+      [name, addressLine1, addressLine2, phoneNumber, paymentAlias, footerText];
 }

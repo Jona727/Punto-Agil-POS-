@@ -1,4 +1,4 @@
-# 🛒 PuntoÁgil POS (Mobile POS & Billing App)
+# 🛒 Cobrá (Punto de Venta móvil)
 
 Una aplicación de facturación y Punto de Venta (POS) "Offline-First" rápida, rica en funciones y construida con Flutter. Diseñada para agilizar las operaciones de cobro en comercios minoristas locales, incluyendo escaneo de códigos de barras, pagos mediante Alias (Mercado Pago / Billeteras Virtuales), impresión térmica por Wi-Fi (TCP/IP) y persistencia robusta de datos locales.
 
@@ -77,7 +77,7 @@ lib/
 1. Clone the repository and navigate to the project directory:
    ```bash
    git clone <repository_url>
-   cd billing_app
+   cd cobra
    ```
 
 2. Fetch dependencies:

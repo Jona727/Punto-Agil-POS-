@@ -19,7 +19,7 @@ class ShopModel extends Shop {
   final String phoneNumber;
   @override
   @HiveField(4)
-  final String upiId;
+  final String paymentAlias;
   @override
   @HiveField(5)
   final String footerText;
@@ -29,14 +29,14 @@ class ShopModel extends Shop {
     required this.addressLine1,
     required this.addressLine2,
     required this.phoneNumber,
-    required this.upiId,
+    required this.paymentAlias,
     required this.footerText,
   }) : super(
           name: name,
           addressLine1: addressLine1,
           addressLine2: addressLine2,
           phoneNumber: phoneNumber,
-          upiId: upiId,
+          paymentAlias: paymentAlias,
           footerText: footerText,
         );
 
@@ -46,7 +46,7 @@ class ShopModel extends Shop {
       addressLine1: shop.addressLine1,
       addressLine2: shop.addressLine2,
       phoneNumber: shop.phoneNumber,
-      upiId: shop.upiId,
+      paymentAlias: shop.paymentAlias,
       footerText: shop.footerText,
     );
   }

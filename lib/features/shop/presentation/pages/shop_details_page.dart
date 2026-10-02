@@ -1,5 +1,5 @@
-import 'package:billing_app/core/widgets/input_label.dart';
-import 'package:billing_app/core/widgets/primary_button.dart';
+import 'package:cobra/core/widgets/input_label.dart';
+import 'package:cobra/core/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -21,7 +21,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   late TextEditingController _address1Controller;
   late TextEditingController _address2Controller;
   late TextEditingController _phoneController;
-  late TextEditingController _upiController;
+  late TextEditingController _aliasController;
   late TextEditingController _footerController;
 
   @override
@@ -31,7 +31,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _address1Controller = TextEditingController();
     _address2Controller = TextEditingController();
     _phoneController = TextEditingController();
-    _upiController = TextEditingController();
+    _aliasController = TextEditingController();
     _footerController = TextEditingController();
 
     // Load shop data
@@ -44,7 +44,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       _address1Controller.text = shop.addressLine1;
       _address2Controller.text = shop.addressLine2;
       _phoneController.text = shop.phoneNumber;
-      _upiController.text = shop.upiId;
+      _aliasController.text = shop.paymentAlias;
       _footerController.text = shop.footerText;
     }
   }
@@ -55,7 +55,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     _address1Controller.dispose();
     _address2Controller.dispose();
     _phoneController.dispose();
-    _upiController.dispose();
+    _aliasController.dispose();
     _footerController.dispose();
     super.dispose();
   }
@@ -67,7 +67,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
         addressLine1: _address1Controller.text,
         addressLine2: _address2Controller.text,
         phoneNumber: _phoneController.text,
-        upiId: _upiController.text,
+        paymentAlias: _aliasController.text,
         footerText: _footerController.text,
       );
 
@@ -147,15 +147,15 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                     const InputLabel(text: 'Phone Number'),
                     _buildTextField(
                       controller: _phoneController,
-                      hint: '+91 7010674588',
+                      hint: '+54 9 11 1234 5678',
                       keyboardType: TextInputType.phone,
                       validator: AppValidators.required('Required'),
                     ),
                     const SizedBox(height: 15),
                     const InputLabel(text: 'Alias / Link (MercadoPago)'),
                     _buildTextField(
-                      controller: _upiController,
-                      hint: 'dineshsowndar@oksbi',
+                      controller: _aliasController,
+                      hint: 'mi.alias.mp',
                     ),
                     const SizedBox(height: 15),
                     Row(
