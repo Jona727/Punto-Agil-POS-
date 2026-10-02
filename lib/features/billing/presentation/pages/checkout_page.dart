@@ -59,7 +59,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Checkout',
+            title: const Text('Cobrar',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             centerTitle: true,
             backgroundColor: Colors.transparent,
@@ -80,11 +80,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
               return BlocBuilder<ShopBloc, ShopState>(
                   builder: (context, shopState) {
                 String paymentAlias = '';
-                String shopName = 'Shop';
 
                 if (shopState is ShopLoaded) {
                   paymentAlias = shopState.shop.paymentAlias;
-                  shopName = shopState.shop.name;
                 }
 
                 // Build MercadoPago deep-link (offline-safe: URL is generated locally)
@@ -132,9 +130,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       ),
                                       children: [
                                         _buildHeaderCell(
-                                            'Product Name', TextAlign.left),
+                                            'Producto', TextAlign.left),
                                         _buildHeaderCell(
-                                            'Price', TextAlign.right),
+                                            'Precio', TextAlign.right),
                                         _buildHeaderCell(
                                             'Total', TextAlign.right),
                                       ],
@@ -272,7 +270,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      'GRAND TOTAL',
+                                      'TOTAL A COBRAR',
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
@@ -313,13 +311,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(const SnackBar(
                                               content: Text(
-                                                  'Shop details not loaded'),
+                                                  'No se cargaron los datos del negocio'),
                                               backgroundColor: Colors.red));
                                     }
                                   },
                             label: billingState.printSuccess
                                 ? 'Impreso ✅'
-                                : 'Print Receipt',
+                                : 'Imprimir ticket',
                             icon: Icons.print,
                             isLoading: billingState.isPrinting,
                           ),

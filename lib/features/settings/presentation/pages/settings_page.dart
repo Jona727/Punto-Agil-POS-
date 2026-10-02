@@ -28,7 +28,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings',
+        title: const Text('Ajustes',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -50,7 +50,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
               child: BlocBuilder<ShopBloc, ShopState>(
                 builder: (context, state) {
-                  String shopName = 'Elite Groceries';
+                  String shopName = 'Mi Negocio';
                   String initials = 'EG';
                   if (state is ShopLoaded && state.shop.name.isNotEmpty) {
                     shopName = state.shop.name;
@@ -99,23 +99,23 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 24),
 
             // Management Section
-            _buildSectionHeader('Management'),
+            _buildSectionHeader('Gestión'),
             _buildListGroup(
               children: [
                 _buildListItem(
                   icon: Icons.qr_code_scanner,
-                  title: 'Products',
-                  subtitle: 'Manage stock and barcodes',
+                  title: 'Productos',
+                  subtitle: 'Administrá el stock y los códigos',
                   onTap: () => context.push('/products'),
                 ),
                 _buildDivider(),
                 _buildListItem(
                   icon: Icons.receipt_long,
-                  title: 'Print Z Report',
-                  subtitle: 'Daily summary of sales',
+                  title: 'Imprimir cierre Z',
+                  subtitle: 'Resumen de ventas del día',
                   onTap: () {
                     final shopState = context.read<ShopBloc>().state;
-                    String shopName = 'Elite Groceries';
+                    String shopName = 'Mi Negocio';
                     if (shopState is ShopLoaded &&
                         shopState.shop.name.isNotEmpty) {
                       shopName = shopState.shop.name;
@@ -126,15 +126,15 @@ class _SettingsPageState extends State<SettingsPage> {
                         .add(PrintZReportEvent(shopName: shopName));
 
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Printing Z Report...'),
+                        content: Text('Imprimiendo cierre Z...'),
                         backgroundColor: Colors.blue));
                   },
                 ),
                 _buildDivider(),
                 _buildListItem(
                   icon: Icons.storefront,
-                  title: 'Shop Details',
-                  subtitle: 'Edit business info & address',
+                  title: 'Datos del negocio',
+                  subtitle: 'Editá nombre, dirección y teléfono',
                   onTap: () => context.push('/shop'),
                 ),
               ],
@@ -143,7 +143,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 24),
 
             // ── Printer Selection ──────────────────────────────────────────
-            _buildSectionHeader('Hardware - Primary Printer'),
+            _buildSectionHeader('Impresora principal'),
             BlocBuilder<PrinterBloc, PrinterState>(
               builder: (context, state) {
                 return Container(
@@ -157,7 +157,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Column(
                     children: [
                       const Text(
-                        'Select which printer to use by default during checkout.',
+                        'Elegí qué impresora usar por defecto al cobrar.',
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       const SizedBox(height: 12),
@@ -197,7 +197,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 24),
 
             // ── Wi-Fi Printer Section ──────────────────────────────────────
-            _buildSectionHeader('Wi-Fi / LAN Configuration'),
+            _buildSectionHeader('Configuración Wi-Fi / LAN'),
             BlocConsumer<PrinterBloc, PrinterState>(
               listener: (context, state) {
                 if (state.wifiStatus == PrinterStatus.error &&
@@ -208,7 +208,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 } else if (state.wifiStatus == PrinterStatus.connected &&
                     state.connectedIp != null) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Connected to Wi-Fi printer!'),
+                      content: Text('¡Conectado a la impresora Wi-Fi!'),
                       backgroundColor: Colors.green));
                 }
               },
@@ -217,19 +217,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [
                     _buildListItem(
                       icon: Icons.print,
-                      title: 'Print Device (Wi-Fi/LAN)',
+                      title: 'Impresora (Wi-Fi/LAN)',
                       subtitleWidget: Row(
                         children: [
                           Text(
                             state.connectedIp != null
                                 ? 'IP: ${state.connectedIp}'
-                                : 'No printer connected',
+                                : 'Sin impresora conectada',
                             style:
                                 TextStyle(fontSize: 12, color: Colors.grey[500]),
                           ),
                           if (state.connectedIp != null) ...[
                             const SizedBox(width: 8),
-                            _buildBadge('CONNECTED', Colors.teal),
+                            _buildBadge('CONECTADA', Colors.teal),
                           ]
                         ],
                       ),
@@ -258,11 +258,11 @@ class _SettingsPageState extends State<SettingsPage> {
                           if (state.connectedIp != null)
                             IconButton(
                               icon: const Icon(Icons.print_outlined),
-                              tooltip: 'Test Print (Wi-Fi)',
+                              tooltip: 'Imprimir prueba (Wi-Fi)',
                               onPressed: () {
                                 final shopState =
                                     context.read<ShopBloc>().state;
-                                String shopName = 'Elite Groceries';
+                                String shopName = 'Mi Negocio';
                                 if (shopState is ShopLoaded) {
                                   shopName = shopState.shop.name;
                                 }
@@ -284,7 +284,7 @@ class _SettingsPageState extends State<SettingsPage> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               child: Text(
-                "Tap + to configure your Thermal Printer via IP Address (e.g. 192.168.1.50). Both devices must be on the same Wi-Fi network.",
+                "Tocá + para configurar tu impresora térmica con su dirección IP (ej: 192.168.1.50). Ambos dispositivos deben estar en la misma red Wi-Fi.",
                 style: TextStyle(
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
@@ -295,7 +295,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 24),
 
             // ── Bluetooth Printer Section ──────────────────────────────────
-            _buildSectionHeader('Hardware - Printer (Bluetooth)'),
+            _buildSectionHeader('Impresora Bluetooth'),
             BlocConsumer<PrinterBloc, PrinterState>(
               listenWhen: (prev, curr) =>
                   prev.btStatus != curr.btStatus ||
@@ -309,7 +309,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 } else if (state.btStatus == PrinterStatus.connected &&
                     state.connectedBtAddress != null) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Connected to Bluetooth printer!'),
+                      content: Text('¡Conectado a la impresora Bluetooth!'),
                       backgroundColor: Colors.green));
                 }
               },
@@ -319,24 +319,24 @@ class _SettingsPageState extends State<SettingsPage> {
                     // Status row
                     _buildListItem(
                       icon: Icons.bluetooth_connected,
-                      title: 'Bluetooth Device',
+                      title: 'Dispositivo Bluetooth',
                       subtitleWidget: Row(
                         children: [
                           Text(
                             state.connectedBtAddress != null
                                 ? state.connectedBtName ??
                                     state.connectedBtAddress!
-                                : 'No device connected',
+                                : 'Sin dispositivo conectado',
                             style: TextStyle(
                                 fontSize: 12, color: Colors.grey[500]),
                           ),
                           if (state.connectedBtAddress != null) ...[
                             const SizedBox(width: 8),
-                            _buildBadge('CONNECTED', Colors.blue),
+                            _buildBadge('CONECTADA', Colors.blue),
                           ],
                           if (state.btStatus == PrinterStatus.scanning) ...[
                             const SizedBox(width: 8),
-                            _buildBadge('SCANNING…', Colors.orange),
+                            _buildBadge('BUSCANDO…', Colors.orange),
                           ],
                         ],
                       ),
@@ -354,7 +354,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             // Scan / list paired devices
                             IconButton(
                               icon: const Icon(Icons.bluetooth_searching),
-                              tooltip: 'Scan paired devices',
+                              tooltip: 'Buscar dispositivos vinculados',
                               onPressed: () {
                                 context
                                     .read<PrinterBloc>()
@@ -365,7 +365,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             if (state.connectedBtAddress != null) ...[
                               IconButton(
                                 icon: const Icon(Icons.link_off),
-                                tooltip: 'Disconnect Bluetooth',
+                                tooltip: 'Desconectar Bluetooth',
                                 onPressed: () => context
                                     .read<PrinterBloc>()
                                     .add(DisconnectBluetoothEvent()),
@@ -373,11 +373,11 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                               IconButton(
                                 icon: const Icon(Icons.print_outlined),
-                                tooltip: 'Test Print (Bluetooth)',
+                                tooltip: 'Imprimir prueba (Bluetooth)',
                                 onPressed: () {
                                   final shopState =
                                       context.read<ShopBloc>().state;
-                                  String shopName = 'Elite Groceries';
+                                  String shopName = 'Mi Negocio';
                                   if (shopState is ShopLoaded) {
                                     shopName = shopState.shop.name;
                                   }
@@ -400,7 +400,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             horizontal: 16, vertical: 8),
                         child: Align(
                           alignment: Alignment.centerLeft,
-                          child: Text('Paired devices',
+                          child: Text('Dispositivos vinculados',
                               style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -421,7 +421,7 @@ class _SettingsPageState extends State<SettingsPage> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               child: Text(
-                "Tap the Bluetooth scan icon to list paired devices. Make sure your printer is paired in Android Settings and turned on before scanning.",
+                "Tocá el ícono de búsqueda Bluetooth para ver los dispositivos vinculados. Asegurate de que la impresora esté vinculada en los Ajustes de Android y encendida.",
                 style: TextStyle(
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
@@ -464,7 +464,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    device.name ?? 'Unknown Device',
+                    device.name ?? 'Dispositivo desconocido',
                     style: TextStyle(
                         fontSize: 13,
                         fontWeight: isConnected
@@ -478,9 +478,9 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             if (isConnected)
-              _buildBadge('CONNECTED', Colors.blue)
+              _buildBadge('CONECTADA', Colors.blue)
             else
-              Text('Tap to connect',
+              Text('Tocá para conectar',
                   style: TextStyle(
                       fontSize: 11, color: Colors.grey[400])),
           ],
@@ -513,12 +513,12 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Connect Wi-Fi Printer'),
+          title: const Text('Conectar impresora Wi-Fi'),
           content: TextField(
             controller: ipController,
             decoration: const InputDecoration(
               hintText: 'e.g. 192.168.1.100',
-              labelText: 'Printer IP Address',
+              labelText: 'Dirección IP de la impresora',
             ),
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
@@ -527,7 +527,7 @@ class _SettingsPageState extends State<SettingsPage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               child:
-                  const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                  const Text('Cancelar', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -536,11 +536,11 @@ class _SettingsPageState extends State<SettingsPage> {
                 final ip = ipController.text.trim();
                 if (ip.isNotEmpty) {
                   context.read<PrinterBloc>().add(
-                      ConnectPrinterEvent(ip: ip, name: 'Network Printer'));
+                      ConnectPrinterEvent(ip: ip, name: 'Impresora de red'));
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Connect'),
+              child: const Text('Conectar'),
             ),
           ],
         );

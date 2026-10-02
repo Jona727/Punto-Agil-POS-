@@ -100,7 +100,7 @@ class PrinterHelper {
     // Argentina time (UTC-3) — computed locally, no internet needed
     final now = DateTime.now().toUtc().subtract(const Duration(hours: 3));
     String formattedDate =
-        DateFormat('dd-MM-yyyy hh:mm a').format(now);
+        DateFormat('dd/MM/yyyy HH:mm').format(now);
     bytes += _textToBytes(formattedDate);
     bytes += EscPos.lineFeed;
 
@@ -109,7 +109,7 @@ class PrinterHelper {
 
     // Header (Align Left)
     bytes += EscPos.alignLeft;
-    bytes += _textToBytes('Item            Price   Total');
+    bytes += _textToBytes('Articulo        Precio  Total');
     bytes += EscPos.lineFeed;
     bytes += _textToBytes('--------------------------------');
     bytes += EscPos.lineFeed;

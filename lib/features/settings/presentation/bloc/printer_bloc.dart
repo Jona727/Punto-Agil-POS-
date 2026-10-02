@@ -36,7 +36,7 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
       emit(state.copyWith(
         wifiStatus: PrinterStatus.connected,
         connectedIp: ip,
-        connectedName: name ?? 'WiFi Printer',
+        connectedName: name ?? 'Impresora Wi-Fi',
       ));
     } else {
       emit(state.copyWith(wifiStatus: PrinterStatus.disconnected));
@@ -66,7 +66,7 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
         emit(state.copyWith(
           wifiStatus: PrinterStatus.error,
           wifiErrorMessage:
-              'Failed to connect. Make sure IP and Port (9100) are reachable.',
+              'No se pudo conectar. Verificá que la IP y el puerto (9100) sean accesibles.',
         ));
         emit(state.copyWith(wifiStatus: PrinterStatus.disconnected));
       }
@@ -106,7 +106,7 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
       emit(state.copyWith(
         btStatus: PrinterStatus.connected,
         connectedBtAddress: address,
-        connectedBtName: name ?? 'Bluetooth Printer',
+        connectedBtName: name ?? 'Impresora Bluetooth',
       ));
     } else {
       emit(state.copyWith(btStatus: PrinterStatus.disconnected));
@@ -121,7 +121,7 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
       emit(state.copyWith(
         btStatus: PrinterStatus.error,
         btErrorMessage:
-            'Bluetooth permissions required to scan and connect devices.',
+            'Se necesitan permisos de Bluetooth para buscar y conectar dispositivos.',
       ));
       emit(state.copyWith(btStatus: PrinterStatus.disconnected));
       return;
@@ -150,16 +150,16 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
       final success = await repository.connectBluetooth(event.device);
       if (success) {
         await repository.saveBluetoothDevice(
-            event.device.address, event.device.name ?? 'BT Printer');
+            event.device.address, event.device.name ?? 'Impresora BT');
         emit(state.copyWith(
           btStatus: PrinterStatus.connected,
           connectedBtAddress: event.device.address,
-          connectedBtName: event.device.name ?? 'BT Printer',
+          connectedBtName: event.device.name ?? 'Impresora BT',
         ));
       } else {
         emit(state.copyWith(
           btStatus: PrinterStatus.error,
-          btErrorMessage: 'Could not connect. Is the device paired and on?',
+          btErrorMessage: 'No se pudo conectar. ¿Está vinculada y encendida?',
         ));
         emit(state.copyWith(btStatus: PrinterStatus.disconnected));
       }

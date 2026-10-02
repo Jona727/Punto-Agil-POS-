@@ -96,7 +96,7 @@ class BluetoothPrinterHelper {
     bytes += EscPos.lineFeed;
 
     bytes += EscPos.alignLeft;
-    bytes += 'Item            Price   Total'.codeUnits;
+    bytes += 'Articulo        Precio  Total'.codeUnits;
     bytes += EscPos.lineFeed;
     bytes += '--------------------------------'.codeUnits;
     bytes += EscPos.lineFeed;

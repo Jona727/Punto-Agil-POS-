@@ -60,7 +60,7 @@ class _ProductListPageState extends State<ProductListPage> {
               size: 28, color: Theme.of(context).primaryColor),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Product Management',
+        title: const Text('Productos',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         actions: [
@@ -88,14 +88,14 @@ class _ProductListPageState extends State<ProductListPage> {
                           controller: _searchController,
                           textCapitalization: TextCapitalization.words,
                           decoration: InputDecoration(
-                            hintText: 'Scan or enter barcode',
+                            hintText: 'Escaneá o ingresá el código',
                             prefixIcon: Icon(
                               Icons.search,
                               color: Colors.grey[400],
                             ),
                           ),
                           validator:
-                              AppValidators.required('Please enter a barcode'),
+                              AppValidators.required('Ingresá un código de barras'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -114,7 +114,7 @@ class _ProductListPageState extends State<ProductListPage> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  const Text('Tap the icon to open camera scanner',
+                  const Text('Tocá el ícono para abrir el escáner',
                       style: TextStyle(fontSize: 12, color: Color(0xFF4C669A))),
                 ],
               );
@@ -151,7 +151,7 @@ class _ProductListPageState extends State<ProductListPage> {
                     return Center(child: Text('Error: ${state.message}'));
                   }
                   return const Center(
-                      child: Text('No products found. Add some!'));
+                      child: Text('No hay productos. ¡Agregá el primero!'));
                 }
 
                 final filteredProducts = state.products
@@ -162,7 +162,7 @@ class _ProductListPageState extends State<ProductListPage> {
 
                 if (filteredProducts.isEmpty) {
                   return const Center(
-                      child: Text('No products match your search.'));
+                      child: Text('Ningún producto coincide con la búsqueda.'));
                 }
 
                 return ListView.separated(
@@ -271,19 +271,19 @@ class _ProductListPageState extends State<ProductListPage> {
       context: context,
       builder: (innerContext) {
         return AlertDialog(
-          title: const Text('Delete Product'),
-          content: Text('Are you sure you want to delete ${product.name}?'),
+          title: const Text('Eliminar producto'),
+          content: Text('¿Seguro que querés eliminar ${product.name}?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(innerContext),
-              child: const Text('Cancel'),
+              child: const Text('Cancelar'),
             ),
             TextButton(
               onPressed: () {
                 context.read<ProductBloc>().add(DeleteProduct(product.id));
                 Navigator.pop(innerContext);
               },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -299,34 +299,34 @@ class _ProductListPageState extends State<ProductListPage> {
       context: context,
       builder: (innerContext) {
         return AlertDialog(
-          title: const Text('Update Prices Massively'),
+          title: const Text('Aumento masivo de precios'),
           content: Form(
             key: formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                    'Enter the percentage (%) to increase all product prices:'),
+                    'Ingresá el porcentaje (%) de aumento para todos los productos:'),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: percentageController,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
-                    labelText: 'Percentage (%)',
+                    labelText: 'Porcentaje (%)',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.percent),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter a percentage';
+                      return 'Ingresá un porcentaje';
                     }
                     final number = double.tryParse(value);
                     if (number == null) {
-                      return 'Please enter a valid number';
+                      return 'Ingresá un número válido';
                     }
                     if (number <= 0) {
-                      return 'Percentage must be greater than 0';
+                      return 'El porcentaje debe ser mayor a 0';
                     }
                     return null;
                   },
@@ -337,7 +337,7 @@ class _ProductListPageState extends State<ProductListPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(innerContext),
-              child: const Text('Cancel'),
+              child: const Text('Cancelar'),
             ),
             FilledButton(
               onPressed: () {
@@ -349,7 +349,7 @@ class _ProductListPageState extends State<ProductListPage> {
                   Navigator.pop(innerContext);
                 }
               },
-              child: const Text('Apply'),
+              child: const Text('Aplicar'),
             ),
           ],
         );

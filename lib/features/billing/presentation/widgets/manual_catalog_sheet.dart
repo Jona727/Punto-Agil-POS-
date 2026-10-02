@@ -56,7 +56,7 @@ class _ManualCatalogSheetState extends State<ManualCatalogSheet> {
             ),
           ),
           
-          Text('Manual Item Entry',
+          Text('Agregar producto manualmente',
               style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -71,7 +71,7 @@ class _ManualCatalogSheetState extends State<ManualCatalogSheet> {
               setState(() {}); // Trigger rebuild to filter
             },
             decoration: InputDecoration(
-              hintText: 'Search product by name...',
+              hintText: 'Buscar producto por nombre...',
               prefixIcon: const Icon(Icons.search, color: Colors.grey),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               border: OutlineInputBorder(
@@ -111,7 +111,7 @@ class _ManualCatalogSheetState extends State<ManualCatalogSheet> {
                         Icon(Icons.inventory_2_outlined,
                             size: 48, color: Colors.grey[400]),
                         const SizedBox(height: 16),
-                        Text('No products found',
+                        Text('No se encontraron productos',
                             style: TextStyle(color: Colors.grey[600])),
                       ],
                     );
@@ -137,7 +137,7 @@ class _ManualCatalogSheetState extends State<ManualCatalogSheet> {
                             // Show small feedback (not obtrusive)
                             ScaffoldMessenger.of(context).clearSnackBars();
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text('Added ${product.name} to cart'),
+                              content: Text('${product.name} agregado al carrito'),
                               duration: const Duration(seconds: 1),
                               behavior: SnackBarBehavior.floating,
                             ));

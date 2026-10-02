@@ -40,7 +40,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     final result = await getProductByBarcodeUseCase(event.barcode);
     result.fold(
       (failure) =>
-          emit(state.copyWith(error: 'Product not found: ${event.barcode}')),
+          emit(state.copyWith(error: 'Producto no encontrado: ${event.barcode}')),
       (product) {
         add(AddProductToCartEvent(product));
       },
@@ -164,13 +164,13 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           final device = BluetoothDevice(address: savedBtAddr);
           final connected = await btHelper.connect(device);
           if (!connected) {
-            emit(state.copyWith(error: 'Failed to connect to preferred Bluetooth printer!', clearError: false));
+            emit(state.copyWith(error: 'No se pudo conectar a la impresora Bluetooth.', clearError: false));
             emit(state.copyWith(clearError: true));
             return;
           }
           usingBluetooth = true;
         } else {
-          emit(state.copyWith(error: 'Bluetooth preferred but no device configured.', clearError: false));
+          emit(state.copyWith(error: 'Elegiste Bluetooth pero no hay impresora configurada.', clearError: false));
           emit(state.copyWith(clearError: true));
           return;
         }
@@ -190,18 +190,18 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
               if (connectedBt) {
                 usingBluetooth = true;
               } else {
-                emit(state.copyWith(error: 'Failed to auto-connect to any printer!', clearError: false));
+                emit(state.copyWith(error: 'No se pudo conectar a ninguna impresora.', clearError: false));
                 emit(state.copyWith(clearError: true));
                 return;
               }
             } else {
-              emit(state.copyWith(error: 'Wi-Fi connection failed and no Bluetooth configured.', clearError: false));
+              emit(state.copyWith(error: 'Falló la conexión Wi-Fi y no hay Bluetooth configurado.', clearError: false));
               emit(state.copyWith(clearError: true));
               return;
             }
           } else {
             // Preferred WiFi failed
-            emit(state.copyWith(error: 'Failed to connect to preferred Wi-Fi printer!', clearError: false));
+            emit(state.copyWith(error: 'No se pudo conectar a la impresora Wi-Fi.', clearError: false));
             emit(state.copyWith(clearError: true));
             return;
           }
@@ -214,17 +214,17 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
              if (connected) {
                usingBluetooth = true;
              } else {
-               emit(state.copyWith(error: 'Failed to connect to Bluetooth printer!', clearError: false));
+               emit(state.copyWith(error: 'No se pudo conectar a la impresora Bluetooth.', clearError: false));
                emit(state.copyWith(clearError: true));
                return;
              }
           } else {
-             emit(state.copyWith(error: 'No printer configured.', clearError: false));
+             emit(state.copyWith(error: 'No hay impresora configurada.', clearError: false));
              emit(state.copyWith(clearError: true));
              return;
           }
         } else {
-          emit(state.copyWith(error: 'Preferred Wi-Fi not configured.', clearError: false));
+          emit(state.copyWith(error: 'La impresora Wi-Fi no está configurada.', clearError: false));
           emit(state.copyWith(clearError: true));
           return;
         }
@@ -271,7 +271,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
       emit(state.copyWith(isPrinting: false, printSuccess: true));
     } catch (e) {
       emit(state.copyWith(
-          isPrinting: false, error: 'Print failed: $e', clearError: false));
+          isPrinting: false, error: 'Error al imprimir: $e', clearError: false));
       emit(state.copyWith(clearError: true));
     }
   }
@@ -287,7 +287,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
       (failure) async {
         emit(state.copyWith(
             isPrinting: false,
-            error: 'Failed to load sales: ${failure.message}',
+            error: 'No se pudieron cargar las ventas: ${failure.message}',
             clearError: false));
         emit(state.copyWith(clearError: true));
       },
@@ -295,7 +295,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
         if (sales.isEmpty) {
           emit(state.copyWith(
               isPrinting: false,
-              error: 'No sales recorded today to close the batch.',
+              error: 'No hay ventas registradas hoy para cerrar la caja.',
               clearError: false));
           emit(state.copyWith(clearError: true));
           return;
@@ -318,7 +318,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
               final device = BluetoothDevice(address: savedBtAddr);
               final connected = await btHelper.connect(device);
               if (!connected) {
-                emit(state.copyWith(error: 'Failed to connect to Bluetooth printer for Z-Report', clearError: false));
+                emit(state.copyWith(error: 'No se pudo conectar a la impresora Bluetooth para el cierre.', clearError: false));
                 emit(state.copyWith(clearError: true));
                 return;
               }
@@ -355,13 +355,13 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           // Format the Z Report mimicking a receipt but replacing item list with summary
           final items = [
             {
-              'name': 'TOTAL TRANSACTIONS',
+              'name': 'CANT. DE VENTAS',
               'qty': sales.length,
               'price': 0.0,
               'total': 0.0,
             },
             {
-              'name': 'GROSS SALES',
+              'name': 'TOTAL VENTAS',
               'qty': 1,
               'price': grandTotal,
               'total': grandTotal,
@@ -369,13 +369,13 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           ];
 
           final receiptArgs = (
-            shopName: '*** Z REPORT ***\n${event.shopName}',
-            address1: 'END OF DAY BATCH',
-            address2: 'Date: ${DateTime.now().toString().substring(0, 16)}',
+            shopName: '*** CIERRE Z ***\n${event.shopName}',
+            address1: 'CIERRE DEL DIA',
+            address2: 'Fecha: ${DateTime.now().toString().substring(0, 16)}',
             phone: '',
             items: items,
             total: grandTotal,
-            footer: 'Z-REPORT CLOSED SUCCESSFULLY',
+            footer: 'CIERRE REALIZADO',
           );
           if (usingBluetooth) {
             await btHelper.printReceipt(
@@ -402,7 +402,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           emit(state.copyWith(isPrinting: false, printSuccess: true));
         } catch (e) {
           emit(state.copyWith(
-              isPrinting: false, error: 'Print failed: $e', clearError: false));
+              isPrinting: false, error: 'Error al imprimir: $e', clearError: false));
           emit(state.copyWith(clearError: true));
         }
       },

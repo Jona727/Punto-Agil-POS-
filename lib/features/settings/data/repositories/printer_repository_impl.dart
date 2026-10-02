@@ -58,7 +58,7 @@ class PrinterRepositoryImpl implements PrinterRepository {
   @override
   Future<void> testPrint(String shopName) async {
     await _wifiHelper
-        .printText("Test Print\n\n$shopName\n\n----------------\n\n");
+        .printText("Prueba de impresion\n\n$shopName\n\n----------------\n\n");
   }
 
   // ── Bluetooth ─────────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ class PrinterRepositoryImpl implements PrinterRepository {
   @override
   Future<void> testPrintBluetooth(String shopName) async {
     await _btHelper
-        .printText("Test Print\n\n$shopName\n\n----------------\n\n");
+        .printText("Prueba de impresion\n\n$shopName\n\n----------------\n\n");
   }
 
   // ── Preferences ────────────────────────────────────────────────────────────
