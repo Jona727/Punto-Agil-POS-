@@ -1,45 +1,44 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'sale_model.dart';
+part of 'sale_item_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class SaleModelAdapter extends TypeAdapter<SaleModel> {
+class SaleItemModelAdapter extends TypeAdapter<SaleItemModel> {
   @override
-  final int typeId = 2;
+  final int typeId = 3;
 
   @override
-  SaleModel read(BinaryReader reader) {
+  SaleItemModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return SaleModel(
-      id: fields[0] as String,
-      date: fields[1] as DateTime,
-      total: fields[2] as double,
-      // Ventas guardadas antes de esta versión no tienen estos campos.
-      voided: fields[3] as bool? ?? false,
-      items: (fields[4] as List?)?.cast<SaleItemModel>() ?? const [],
+    return SaleItemModel(
+      productId: fields[0] as String,
+      name: fields[1] as String,
+      barcode: fields[2] as String,
+      unitPrice: fields[3] as double,
+      quantity: fields[4] as int,
     );
   }
 
   @override
-  void write(BinaryWriter writer, SaleModel obj) {
+  void write(BinaryWriter writer, SaleItemModel obj) {
     writer
       ..writeByte(5)
       ..writeByte(0)
-      ..write(obj.id)
+      ..write(obj.productId)
       ..writeByte(1)
-      ..write(obj.date)
+      ..write(obj.name)
       ..writeByte(2)
-      ..write(obj.total)
+      ..write(obj.barcode)
       ..writeByte(3)
-      ..write(obj.voided)
+      ..write(obj.unitPrice)
       ..writeByte(4)
-      ..write(obj.items);
+      ..write(obj.quantity);
   }
 
   @override
@@ -48,7 +47,7 @@ class SaleModelAdapter extends TypeAdapter<SaleModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is SaleModelAdapter &&
+      other is SaleItemModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

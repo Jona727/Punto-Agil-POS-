@@ -1,5 +1,6 @@
 import 'package:hive/hive.dart';
 import '../../domain/entities/sale.dart';
+import 'sale_item_model.dart';
 
 part 'sale_model.g.dart';
 
@@ -17,11 +18,15 @@ class SaleModel extends HiveObject {
   @HiveField(3)
   final bool voided;
 
+  @HiveField(4)
+  final List<SaleItemModel> items;
+
   SaleModel({
     required this.id,
     required this.date,
     required this.total,
     this.voided = false,
+    this.items = const [],
   });
 
   factory SaleModel.fromEntity(Sale sale) {
@@ -30,6 +35,7 @@ class SaleModel extends HiveObject {
       date: sale.date,
       total: sale.total,
       voided: sale.voided,
+      items: sale.items.map(SaleItemModel.fromEntity).toList(),
     );
   }
 
@@ -39,6 +45,7 @@ class SaleModel extends HiveObject {
       date: date,
       total: total,
       voided: voided,
+      items: items.map((i) => i.toEntity()).toList(),
     );
   }
 }

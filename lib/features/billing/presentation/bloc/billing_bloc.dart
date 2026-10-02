@@ -9,6 +9,7 @@ import '../../../../core/utils/bluetooth_printer_helper.dart';
 import '../../../../core/data/hive_database.dart';
 import '../../domain/usecases/sale_usecases.dart';
 import '../../domain/entities/sale.dart';
+import '../../domain/entities/sale_item.dart';
 import 'package:uuid/uuid.dart';
 
 part 'billing_event.dart';
@@ -241,6 +242,15 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
         id: const Uuid().v4(),
         date: DateTime.now(),
         total: state.totalAmount,
+        items: state.cartItems
+            .map((item) => SaleItem(
+                  productId: item.product.id,
+                  name: item.product.name,
+                  barcode: item.product.barcode,
+                  unitPrice: item.product.price,
+                  quantity: item.quantity,
+                ))
+            .toList(),
       );
       await saveSaleUseCase(sale);
 
