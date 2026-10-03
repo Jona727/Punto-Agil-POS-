@@ -1,4 +1,8 @@
 import 'package:get_it/get_it.dart';
+import '../../features/catalog/data/asset_catalog_source.dart';
+import '../../features/catalog/data/catalog_repository_impl.dart';
+import '../../features/catalog/data/supabase_catalog_source.dart';
+import '../../features/catalog/domain/catalog_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/app_config.dart';
 import '../../features/sync/data/hive_sync_storage.dart';
@@ -39,6 +43,14 @@ Future<void> init() async {
   } else {
     sl.registerLazySingleton<SyncRecorder>(() => const NoopSyncRecorder());
   }
+
+  // Catálogo de productos: el de la app siempre; el de la nube solo si hay Supabase.
+  sl.registerLazySingleton<CatalogRepository>(() => CatalogRepositoryImpl(
+        local: AssetCatalogSource(),
+        remote: AppConfig.isSupabaseConfigured
+            ? SupabaseCatalogSource(Supabase.instance.client)
+            : null,
+      ));
 
   // Features - Auth (singleton: el router y las pantallas comparten el estado)
   sl.registerLazySingleton<AuthRepository>(() => SupabaseAuthRepository());

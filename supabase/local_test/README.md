@@ -16,6 +16,8 @@ psql cobra_test -f supabase/migrations/002_asegurar_comercio.sql
 psql cobra_test -f supabase/migrations/003_reparar_seguridad.sql   # idempotente
 psql cobra_test -f supabase/migrations/004_medio_de_pago.sql
 psql cobra_test -f supabase/migrations/005_qr_de_cobro.sql
+psql cobra_test -f supabase/migrations/006_catalogo_productos.sql
+psql cobra_test -c "\\copy public.catalog_products(ean,name,brand,category,source) from 'supabase/seed/catalog_seed.csv' csv header"
 
 # Dos usuarios de prueba (el trigger les crea su comercio)
 psql cobra_test -c "insert into auth.users (id, email) values

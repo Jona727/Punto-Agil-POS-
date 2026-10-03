@@ -450,7 +450,19 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
 
-            const SizedBox(height: 48),
+            // Crédito obligatorio de la licencia de los datos del catálogo.
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: Text(
+                'Catálogo de productos: datos abiertos de SEPA / Precios Claros '
+                '(Secretaría de Comercio, Gobierno de Argentina), licencia CC BY.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+              ),
+            ),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),

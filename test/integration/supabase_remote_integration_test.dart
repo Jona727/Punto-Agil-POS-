@@ -11,6 +11,7 @@ import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase/supabase.dart';
 import 'package:cobra/features/billing/domain/entities/payment_method.dart';
+import 'package:cobra/features/catalog/data/supabase_catalog_source.dart';
 import 'package:cobra/features/billing/domain/entities/sale.dart';
 import 'package:cobra/features/billing/domain/entities/sale_item.dart';
 import 'package:cobra/features/product/domain/entities/product.dart';
@@ -27,41 +28,62 @@ final _userA = _env['COBRA_USER_A'] ?? '';
 final _userB = _env['COBRA_USER_B'] ?? '';
 
 SupabaseRemoteSyncSource _remoteFor(String uid, {int pageSize = 1000}) {
-  final token =
-      JWT({'sub': uid, 'role': 'authenticated'}).sign(SecretKey(_secret));
-  final client = SupabaseClient(_url!, 'anon-key-no-usada',
-      accessToken: () async => token);
-  return SupabaseRemoteSyncSource(client,
-      currentUserId: () => uid, pageSize: pageSize);
+  final token = JWT({
+    'sub': uid,
+    'role': 'authenticated',
+  }).sign(SecretKey(_secret));
+  final client = SupabaseClient(
+    _url!,
+    'anon-key-no-usada',
+    accessToken: () async => token,
+  );
+  return SupabaseRemoteSyncSource(
+    client,
+    currentUserId: () => uid,
+    pageSize: pageSize,
+  );
 }
 
 void main() {
-  final skip = _url == null ? 'requiere PostgREST local (COBRA_PGRST_URL)' : null;
+  final skip = _url == null
+      ? 'requiere PostgREST local (COBRA_PGRST_URL)'
+      : null;
 
   // flutter_test bloquea el HTTP real (responde 400); acá hace falta de verdad.
   setUpAll(() => HttpOverrides.global = null);
 
-  const yerba =
-      Product(id: 'p1', name: 'Yerba', barcode: '111', price: 2500.5, stock: 7);
-  const galletitas =
-      Product(id: 'p2', name: 'Galletitas', barcode: '222', price: 800);
+  const yerba = Product(
+    id: 'p1',
+    name: 'Yerba',
+    barcode: '111',
+    price: 2500.5,
+    stock: 7,
+  );
+  const galletitas = Product(
+    id: 'p2',
+    name: 'Galletitas',
+    barcode: '222',
+    price: 800,
+  );
   final venta = Sale(
     id: 's1',
     date: DateTime.utc(2026, 10, 2, 18, 30),
     total: 5800,
     items: const [
       SaleItem(
-          productId: 'p1',
-          name: 'Yerba',
-          barcode: '111',
-          unitPrice: 2500,
-          quantity: 2),
+        productId: 'p1',
+        name: 'Yerba',
+        barcode: '111',
+        unitPrice: 2500,
+        quantity: 2,
+      ),
       SaleItem(
-          productId: 'p2',
-          name: 'Galletitas',
-          barcode: '222',
-          unitPrice: 800,
-          quantity: 1),
+        productId: 'p2',
+        name: 'Galletitas',
+        barcode: '222',
+        unitPrice: 800,
+        quantity: 1,
+      ),
     ],
   );
 
@@ -106,39 +128,53 @@ void main() {
     await remote.upsertProduct(yerba);
     expect(
       () => remote.upsertProduct(
-          const Product(id: 'otro', name: 'Otra', barcode: '111', price: 1)),
-      throwsA(isA<SyncRejectedException>()
-          .having((e) => e.message, 'mensaje', contains('código de barras'))),
+        const Product(id: 'otro', name: 'Otra', barcode: '111', price: 1),
+      ),
+      throwsA(
+        isA<SyncRejectedException>().having(
+          (e) => e.message,
+          'mensaje',
+          contains('código de barras'),
+        ),
+      ),
     );
   }, skip: skip);
 
-  test('ventas: se suben con su detalle y la anulación conserva los renglones',
-      () async {
-    final remote = _remoteFor(_userA);
-    await remote.upsertSale(venta);
-    await remote.upsertSale(Sale(
-        id: venta.id,
-        date: venta.date,
-        total: venta.total,
-        voided: true,
-        items: venta.items));
+  test(
+    'ventas: se suben con su detalle y la anulación conserva los renglones',
+    () async {
+      final remote = _remoteFor(_userA);
+      await remote.upsertSale(venta);
+      await remote.upsertSale(
+        Sale(
+          id: venta.id,
+          date: venta.date,
+          total: venta.total,
+          voided: true,
+          items: venta.items,
+        ),
+      );
 
-    final back = (await remote.fetchSales()).singleWhere((s) => s.id == 's1');
-    expect(back.voided, isTrue);
-    expect(back.total, 5800);
-    expect(back.date.toUtc(), venta.date);
-    expect(back.items, venta.items);
-  }, skip: skip);
+      final back = (await remote.fetchSales()).singleWhere((s) => s.id == 's1');
+      expect(back.voided, isTrue);
+      expect(back.total, 5800);
+      expect(back.date.toUtc(), venta.date);
+      expect(back.items, venta.items);
+    },
+    skip: skip,
+  );
 
   test('ventas: el medio de pago viaja a la nube y vuelve', () async {
     final remote = _remoteFor(_userA);
     for (final method in PaymentMethod.values) {
-      await remote.upsertSale(Sale(
-        id: 'pago-${method.code}',
-        date: DateTime.utc(2026, 10, 3, 15),
-        total: 100,
-        paymentMethod: method,
-      ));
+      await remote.upsertSale(
+        Sale(
+          id: 'pago-${method.code}',
+          date: DateTime.utc(2026, 10, 3, 15),
+          total: 100,
+          paymentMethod: method,
+        ),
+      );
     }
     final back = {for (final s in await remote.fetchSales()) s.id: s};
     for (final method in PaymentMethod.values) {
@@ -146,11 +182,71 @@ void main() {
     }
   }, skip: skip);
 
+  group('catálogo de productos en la nube', () {
+    SupabaseClient clienteCon(String role) {
+      final token = JWT({'sub': _userA, 'role': role}).sign(SecretKey(_secret));
+      return SupabaseClient(
+        _url!,
+        'anon-key-no-usada',
+        accessToken: () async => token,
+      );
+    }
+
+    test('con sesión, encuentra un producto por su código', () async {
+      final source = SupabaseCatalogSource(clienteCon('authenticated'));
+      final coca = await source.find('7790895000430');
+      expect(coca!.name, 'Coca Cola 1,5 L');
+      expect(coca.brand, 'Coca Cola');
+      expect(coca.category, 'Bebidas sin alcohol');
+    }, skip: skip);
+
+    test('un código que no está devuelve null', () async {
+      final source = SupabaseCatalogSource(clienteCon('authenticated'));
+      expect(await source.find('7799999999990'), isNull);
+    }, skip: skip);
+
+    test('el catálogo es de solo lectura para los usuarios', () async {
+      final client = clienteCon('authenticated');
+      expect(
+        () => client.from('catalog_products').insert({
+          'ean': '7790000000019',
+          'name': 'Intruso',
+        }),
+        throwsA(anything),
+      );
+    }, skip: skip);
+
+    test('sin sesión (anon) no se puede leer', () async {
+      final client = clienteCon('anon');
+      expect(
+        () => client.from('catalog_products').select().limit(1),
+        throwsA(anything),
+      );
+    }, skip: skip);
+
+    test('sin servidor devuelve null en vez de romper', () async {
+      final token = JWT({
+        'sub': _userA,
+        'role': 'authenticated',
+      }).sign(SecretKey(_secret));
+      final caido = SupabaseCatalogSource(
+        SupabaseClient(
+          'http://127.0.0.1:1',
+          'x',
+          accessToken: () async => token,
+        ),
+        timeout: const Duration(seconds: 3),
+      );
+      expect(await caido.find('7790895000430'), isNull);
+    }, skip: skip);
+  });
+
   test('paginación: trae todo aunque supere el tamaño de página', () async {
     final remote = _remoteFor(_userA, pageSize: 2);
     for (var i = 0; i < 5; i++) {
       await remote.upsertProduct(
-          Product(id: 'm$i', name: 'M$i', barcode: 'bar$i', price: 1));
+        Product(id: 'm$i', name: 'M$i', barcode: 'bar$i', price: 1),
+      );
     }
     final ids = (await remote.fetchProducts()).map((r) => r.product.id);
     expect(ids, containsAll(['m0', 'm1', 'm2', 'm3', 'm4']));
@@ -167,67 +263,83 @@ void main() {
 
     // Aunque Beto intente borrar "p1", no afecta a Ana.
     await beto.deleteProduct('p1');
-    final enAna = (await ana.fetchProducts()).singleWhere((r) => r.product.id == 'p1');
+    final enAna = (await ana.fetchProducts()).singleWhere(
+      (r) => r.product.id == 'p1',
+    );
     expect(enAna.deleted, isFalse);
   }, skip: skip);
 
-  test('sin servidor: es un error pasajero (se reintenta), no un rechazo',
-      () async {
-    final token =
-        JWT({'sub': _userA, 'role': 'authenticated'}).sign(SecretKey(_secret));
-    final caido = SupabaseRemoteSyncSource(
-      SupabaseClient('http://127.0.0.1:1', 'x', accessToken: () async => token),
-      currentUserId: () => _userA,
-      timeout: const Duration(seconds: 3),
-    );
-    expect(() => caido.upsertProduct(yerba),
-        throwsA(isA<SyncRetryableException>()));
-  }, skip: skip);
+  test(
+    'sin servidor: es un error pasajero (se reintenta), no un rechazo',
+    () async {
+      final token = JWT({
+        'sub': _userA,
+        'role': 'authenticated',
+      }).sign(SecretKey(_secret));
+      final caido = SupabaseRemoteSyncSource(
+        SupabaseClient(
+          'http://127.0.0.1:1',
+          'x',
+          accessToken: () async => token,
+        ),
+        currentUserId: () => _userA,
+        timeout: const Duration(seconds: 3),
+      );
+      expect(
+        () => caido.upsertProduct(yerba),
+        throwsA(isA<SyncRetryableException>()),
+      );
+    },
+    skip: skip,
+  );
 
-  test('de punta a punta: lo del teléfono sube y se restaura en otro teléfono',
-      () async {
-    final remote = _remoteFor(_userA);
+  test(
+    'de punta a punta: lo del teléfono sube y se restaura en otro teléfono',
+    () async {
+      final remote = _remoteFor(_userA);
 
-    // Teléfono 1: venía usando la app sin cuenta y ahora crea la cuenta.
-    final local1 = FakeLocalStore()
-      ..shop = const Shop(name: 'Kiosco Lucía', paymentAlias: 'lucia.mp')
-      ..products['p1'] = yerba
-      ..products['p2'] = galletitas
-      ..sales['s1'] = venta;
-    final servicio1 = SyncService(
-      outbox: InMemoryOutbox(),
-      local: local1,
-      remote: remote,
-      settings: FakeSyncSettings(null),
-      autoSync: false,
-    );
-    await servicio1.onSignedIn(_userA);
+      // Teléfono 1: venía usando la app sin cuenta y ahora crea la cuenta.
+      final local1 = FakeLocalStore()
+        ..shop = const Shop(name: 'Kiosco Lucía', paymentAlias: 'lucia.mp')
+        ..products['p1'] = yerba
+        ..products['p2'] = galletitas
+        ..sales['s1'] = venta;
+      final servicio1 = SyncService(
+        outbox: InMemoryOutbox(),
+        local: local1,
+        remote: remote,
+        settings: FakeSyncSettings(null),
+        autoSync: false,
+      );
+      await servicio1.onSignedIn(_userA);
 
-    // Teléfono 2: vacío, ingresa con la misma cuenta.
-    final local2 = FakeLocalStore();
-    final servicio2 = SyncService(
-      outbox: InMemoryOutbox(),
-      local: local2,
-      remote: remote,
-      settings: FakeSyncSettings(null),
-      autoSync: false,
-    );
-    await servicio2.onSignedIn(_userA);
+      // Teléfono 2: vacío, ingresa con la misma cuenta.
+      final local2 = FakeLocalStore();
+      final servicio2 = SyncService(
+        outbox: InMemoryOutbox(),
+        local: local2,
+        remote: remote,
+        settings: FakeSyncSettings(null),
+        autoSync: false,
+      );
+      await servicio2.onSignedIn(_userA);
 
-    expect(local2.shop!.name, 'Kiosco Lucía');
-    expect(local2.shop!.paymentAlias, 'lucia.mp');
-    expect(local2.products['p1'], yerba);
-    expect(local2.products['p2'], galletitas);
-    expect(local2.sales['s1']!.items, venta.items);
+      expect(local2.shop!.name, 'Kiosco Lucía');
+      expect(local2.shop!.paymentAlias, 'lucia.mp');
+      expect(local2.products['p1'], yerba);
+      expect(local2.products['p2'], galletitas);
+      expect(local2.sales['s1']!.items, venta.items);
 
-    // Cambios en el teléfono 1 llegan al 2 en la siguiente sincronización.
-    local1.products['p1'] = yerba.copyWith(price: 4000);
-    await servicio1.record(SyncKind.product, 'p1', SyncAction.upsert);
-    await servicio1.sync();
-    await servicio2.sync();
-    expect(local2.products['p1']!.price, 4000);
+      // Cambios en el teléfono 1 llegan al 2 en la siguiente sincronización.
+      local1.products['p1'] = yerba.copyWith(price: 4000);
+      await servicio1.record(SyncKind.product, 'p1', SyncAction.upsert);
+      await servicio1.sync();
+      await servicio2.sync();
+      expect(local2.products['p1']!.price, 4000);
 
-    await servicio1.dispose();
-    await servicio2.dispose();
-  }, skip: skip);
+      await servicio1.dispose();
+      await servicio2.dispose();
+    },
+    skip: skip,
+  );
 }
