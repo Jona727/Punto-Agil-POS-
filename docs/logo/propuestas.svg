@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="980" viewBox="0 0 1240 980">
+<rect width="1240" height="980" fill="#F4F3FF"/>
+<text x="40" y="58" font-family="'DejaVu Sans', Arial, sans-serif" font-weight="700" font-size="28" fill="#1E1B4B">Cobrá · 4 direcciones de logo</text>
+<text x="40" y="88" font-family="'DejaVu Sans', Arial, sans-serif" font-size="16" fill="#6B6B8A">Colores de la app: violeta #6C63FF y turquesa #03DAC6. Abajo de cada una: como se ve chico (ícono del celular) y con el nombre.</text>
+<g transform="translate(40,120)"><rect width="560" height="400" rx="24" fill="#fff" stroke="#E4E2FF"/>
+<g transform="translate(28,28) scale(.78)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M173.8 80.5 A66 66 0 1 0 173.8 175.5" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round"/>
+<circle cx="194" cy="128" r="15" fill="#03DAC6"/></g>
+<text x="260" y="70" font-family="'DejaVu Sans', Arial, sans-serif" font-weight="700" font-size="26" fill="#1E1B4B">A · Moneda</text>
+<text x="260" y="104" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">Una “C” abierta como moneda,</text>
+<text x="260" y="125" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">con el punto turquesa del</text>
+<text x="260" y="146" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">pago.</text>
+<g transform="translate(260,172) scale(.25)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M173.8 80.5 A66 66 0 1 0 173.8 175.5" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round"/>
+<circle cx="194" cy="128" r="15" fill="#03DAC6"/></g>
+<g transform="translate(340,172) scale(.16)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M173.8 80.5 A66 66 0 1 0 173.8 175.5" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round"/>
+<circle cx="194" cy="128" r="15" fill="#03DAC6"/></g>
+<text x="395" y="212" font-family="'DejaVu Sans', Arial, sans-serif" font-size="12" fill="#9A98B5">tamaño real</text>
+<g transform="translate(28,262)"><g transform="scale(.34)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M173.8 80.5 A66 66 0 1 0 173.8 175.5" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round"/>
+<circle cx="194" cy="128" r="15" fill="#03DAC6"/></g><text x="96" y="60" font-family="Poppins, Montserrat, 'Segoe UI', 'DejaVu Sans', Arial, sans-serif" font-weight="800" font-size="50" fill="#1E1B4B" letter-spacing="-1">Cobr<tspan fill="#03DAC6">á</tspan></text></g>
+<rect x="318" y="262" width="214" height="96" rx="16" fill="#1E1B4B"/>
+<g transform="translate(334,282) scale(.26)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M173.8 80.5 A66 66 0 1 0 173.8 175.5" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round"/>
+<circle cx="194" cy="128" r="15" fill="#03DAC6"/></g><text x="402" y="330" font-family="Poppins, Montserrat, 'Segoe UI', 'DejaVu Sans', Arial, sans-serif" font-weight="800" font-size="34" fill="#fff" letter-spacing="-1">Cobr<tspan fill="#03DAC6">á</tspan></text>
+</g>
+<g transform="translate(640,120)"><rect width="560" height="400" rx="24" fill="#fff" stroke="#E4E2FF"/>
+<g transform="translate(28,28) scale(.78)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M175.6 71.3 A74 74 0 1 0 175.6 184.7" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+<path d="M104 131 L124 151 L160 105" fill="none" stroke="#03DAC6" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="260" y="70" font-family="'DejaVu Sans', Arial, sans-serif" font-weight="700" font-size="26" fill="#1E1B4B">B · Check</text>
+<text x="260" y="104" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">La “C” guarda el tilde de</text>
+<text x="260" y="125" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">cobro confirmado. Transmite</text>
+<text x="260" y="146" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">“listo, cobrado”.</text>
+<g transform="translate(260,172) scale(.25)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M175.6 71.3 A74 74 0 1 0 175.6 184.7" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+<path d="M104 131 L124 151 L160 105" fill="none" stroke="#03DAC6" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g transform="translate(340,172) scale(.16)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M175.6 71.3 A74 74 0 1 0 175.6 184.7" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+<path d="M104 131 L124 151 L160 105" fill="none" stroke="#03DAC6" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="395" y="212" font-family="'DejaVu Sans', Arial, sans-serif" font-size="12" fill="#9A98B5">tamaño real</text>
+<g transform="translate(28,262)"><g transform="scale(.34)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M175.6 71.3 A74 74 0 1 0 175.6 184.7" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+<path d="M104 131 L124 151 L160 105" fill="none" stroke="#03DAC6" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/></g><text x="96" y="60" font-family="Poppins, Montserrat, 'Segoe UI', 'DejaVu Sans', Arial, sans-serif" font-weight="800" font-size="50" fill="#1E1B4B" letter-spacing="-1">Cobr<tspan fill="#03DAC6">á</tspan></text></g>
+<rect x="318" y="262" width="214" height="96" rx="16" fill="#1E1B4B"/>
+<g transform="translate(334,282) scale(.26)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M175.6 71.3 A74 74 0 1 0 175.6 184.7" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+<path d="M104 131 L124 151 L160 105" fill="none" stroke="#03DAC6" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/></g><text x="402" y="330" font-family="Poppins, Montserrat, 'Segoe UI', 'DejaVu Sans', Arial, sans-serif" font-weight="800" font-size="34" fill="#fff" letter-spacing="-1">Cobr<tspan fill="#03DAC6">á</tspan></text>
+</g>
+<g transform="translate(40,550)"><rect width="560" height="400" rx="24" fill="#fff" stroke="#E4E2FF"/>
+<g transform="translate(28,28) scale(.78)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M80 52 H176 V196 L164 208 L152 196 L140 208 L128 196 L116 208 L104 196 L92 208 L80 196 Z" fill="#fff"/>
+<rect x="98" y="80" width="60" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<rect x="98" y="102" width="44" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<rect x="98" y="124" width="52" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<circle cx="178" cy="176" r="38" fill="#03DAC6" stroke="#6C63FF" stroke-width="10"/>
+<path d="M162 177 L174 189 L196 163" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="260" y="70" font-family="'DejaVu Sans', Arial, sans-serif" font-weight="700" font-size="26" fill="#1E1B4B">C · Ticket</text>
+<text x="260" y="104" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">El ticket del punto de venta</text>
+<text x="260" y="125" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">con el sello de pago. Muy</text>
+<text x="260" y="146" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">literal y claro.</text>
+<g transform="translate(260,172) scale(.25)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M80 52 H176 V196 L164 208 L152 196 L140 208 L128 196 L116 208 L104 196 L92 208 L80 196 Z" fill="#fff"/>
+<rect x="98" y="80" width="60" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<rect x="98" y="102" width="44" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<rect x="98" y="124" width="52" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<circle cx="178" cy="176" r="38" fill="#03DAC6" stroke="#6C63FF" stroke-width="10"/>
+<path d="M162 177 L174 189 L196 163" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g transform="translate(340,172) scale(.16)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M80 52 H176 V196 L164 208 L152 196 L140 208 L128 196 L116 208 L104 196 L92 208 L80 196 Z" fill="#fff"/>
+<rect x="98" y="80" width="60" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<rect x="98" y="102" width="44" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<rect x="98" y="124" width="52" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<circle cx="178" cy="176" r="38" fill="#03DAC6" stroke="#6C63FF" stroke-width="10"/>
+<path d="M162 177 L174 189 L196 163" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="395" y="212" font-family="'DejaVu Sans', Arial, sans-serif" font-size="12" fill="#9A98B5">tamaño real</text>
+<g transform="translate(28,262)"><g transform="scale(.34)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M80 52 H176 V196 L164 208 L152 196 L140 208 L128 196 L116 208 L104 196 L92 208 L80 196 Z" fill="#fff"/>
+<rect x="98" y="80" width="60" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<rect x="98" y="102" width="44" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<rect x="98" y="124" width="52" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<circle cx="178" cy="176" r="38" fill="#03DAC6" stroke="#6C63FF" stroke-width="10"/>
+<path d="M162 177 L174 189 L196 163" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></g><text x="96" y="60" font-family="Poppins, Montserrat, 'Segoe UI', 'DejaVu Sans', Arial, sans-serif" font-weight="800" font-size="50" fill="#1E1B4B" letter-spacing="-1">Cobr<tspan fill="#03DAC6">á</tspan></text></g>
+<rect x="318" y="262" width="214" height="96" rx="16" fill="#1E1B4B"/>
+<g transform="translate(334,282) scale(.26)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M80 52 H176 V196 L164 208 L152 196 L140 208 L128 196 L116 208 L104 196 L92 208 L80 196 Z" fill="#fff"/>
+<rect x="98" y="80" width="60" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<rect x="98" y="102" width="44" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<rect x="98" y="124" width="52" height="10" rx="5" fill="#6C63FF" opacity=".28"/>
+<circle cx="178" cy="176" r="38" fill="#03DAC6" stroke="#6C63FF" stroke-width="10"/>
+<path d="M162 177 L174 189 L196 163" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></g><text x="402" y="330" font-family="Poppins, Montserrat, 'Segoe UI', 'DejaVu Sans', Arial, sans-serif" font-weight="800" font-size="34" fill="#fff" letter-spacing="-1">Cobr<tspan fill="#03DAC6">á</tspan></text>
+</g>
+<g transform="translate(640,550)"><rect width="560" height="400" rx="24" fill="#fff" stroke="#E4E2FF"/>
+<g transform="translate(28,28) scale(.78)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M176.2 74.5 A72 72 0 1 0 176.2 181.5" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+<path d="M140 84 L108 136 H128 L116 172 L154 118 H133 Z" fill="#03DAC6" stroke="#03DAC6" stroke-width="6" stroke-linejoin="round"/></g>
+<text x="260" y="70" font-family="'DejaVu Sans', Arial, sans-serif" font-weight="700" font-size="26" fill="#1E1B4B">D · Rayo</text>
+<text x="260" y="104" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">La “C” con un rayo: rapidez</text>
+<text x="260" y="125" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">(“Ágil”). Más enérgico y</text>
+<text x="260" y="146" font-family="'DejaVu Sans', Arial, sans-serif" font-size="15" fill="#6B6B8A">moderno.</text>
+<g transform="translate(260,172) scale(.25)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M176.2 74.5 A72 72 0 1 0 176.2 181.5" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+<path d="M140 84 L108 136 H128 L116 172 L154 118 H133 Z" fill="#03DAC6" stroke="#03DAC6" stroke-width="6" stroke-linejoin="round"/></g>
+<g transform="translate(340,172) scale(.16)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M176.2 74.5 A72 72 0 1 0 176.2 181.5" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+<path d="M140 84 L108 136 H128 L116 172 L154 118 H133 Z" fill="#03DAC6" stroke="#03DAC6" stroke-width="6" stroke-linejoin="round"/></g>
+<text x="395" y="212" font-family="'DejaVu Sans', Arial, sans-serif" font-size="12" fill="#9A98B5">tamaño real</text>
+<g transform="translate(28,262)"><g transform="scale(.34)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M176.2 74.5 A72 72 0 1 0 176.2 181.5" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+<path d="M140 84 L108 136 H128 L116 172 L154 118 H133 Z" fill="#03DAC6" stroke="#03DAC6" stroke-width="6" stroke-linejoin="round"/></g><text x="96" y="60" font-family="Poppins, Montserrat, 'Segoe UI', 'DejaVu Sans', Arial, sans-serif" font-weight="800" font-size="50" fill="#1E1B4B" letter-spacing="-1">Cobr<tspan fill="#03DAC6">á</tspan></text></g>
+<rect x="318" y="262" width="214" height="96" rx="16" fill="#1E1B4B"/>
+<g transform="translate(334,282) scale(.26)"><rect width="256" height="256" rx="58" fill="#6C63FF"/>
+<path d="M176.2 74.5 A72 72 0 1 0 176.2 181.5" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+<path d="M140 84 L108 136 H128 L116 172 L154 118 H133 Z" fill="#03DAC6" stroke="#03DAC6" stroke-width="6" stroke-linejoin="round"/></g><text x="402" y="330" font-family="Poppins, Montserrat, 'Segoe UI', 'DejaVu Sans', Arial, sans-serif" font-weight="800" font-size="34" fill="#fff" letter-spacing="-1">Cobr<tspan fill="#03DAC6">á</tspan></text>
+</g>
+</svg>
