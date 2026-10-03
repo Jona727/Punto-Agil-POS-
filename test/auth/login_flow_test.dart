@@ -46,6 +46,9 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(0), 'ana@correo.com');
     await tester.enterText(find.byType(TextFormField).at(1), 'corta');
     await tester.enterText(find.byType(TextFormField).at(2), 'distinta');
+    // El formulario es más alto que la pantalla de prueba: se hace scroll hasta el botón.
+    await tester.ensureVisible(find.text('Crear cuenta'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Crear cuenta'));
     await tester.pump();
 

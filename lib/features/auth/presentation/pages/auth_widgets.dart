@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/cobra_logo.dart';
 
 /// Marco común de las pantallas de cuenta: logo, título y contenido.
 class AuthScaffold extends StatelessWidget {
@@ -32,15 +33,24 @@ class AuthScaffold extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.point_of_sale,
-                      size: 56, color: AppTheme.primaryColor),
-                  const SizedBox(height: 8),
-                  const Text('Cobrá',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5)),
+                  const Center(child: CobraLogo(size: 76)),
+                  const SizedBox(height: 10),
+                  Text.rich(
+                    TextSpan(
+                      text: 'Cobr',
+                      children: [
+                        TextSpan(
+                          text: 'á',
+                          style: TextStyle(color: AppTheme.secondaryColor),
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5),
+                  ),
                   const SizedBox(height: 24),
                   Text(title,
                       textAlign: TextAlign.center,
