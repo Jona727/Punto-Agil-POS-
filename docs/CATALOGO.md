@@ -4,6 +4,17 @@ Al cargar un producto, si el código de barras está en el catálogo, la app
 completa el nombre sola. El comercio solo agrega el **precio** y el stock.
 No tiene precios a propósito: un kiosco cobra distinto que un supermercado.
 
+## Desde la caja (lo más usado)
+1. Se lee o se escribe el código de barras en la caja (botón del teclado ⌨️).
+2. Si el producto **ya está** en los productos del comercio, se suma a la venta.
+3. Si **no está**, se abre una ventana que lo busca en el catálogo: muestra el
+   nombre y pide **solo el precio**. Al confirmar, el producto queda **guardado**
+   (la próxima vez entra directo) y **agregado a la venta**.
+4. Si tampoco está en el catálogo, se escribe el nombre y el precio.
+
+Así el comercio va armando su lista de productos mientras vende, sin cargar uno
+por uno antes de empezar.
+
 ## Cómo funciona
 1. **Dentro de la app** viaja un catálogo de ~10.000 productos
    (`assets/catalog/productos_ar.json`). Funciona **sin internet y sin cuenta**.

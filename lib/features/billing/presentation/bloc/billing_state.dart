@@ -3,6 +3,10 @@ part of 'billing_bloc.dart';
 class BillingState extends Equatable {
   final List<CartItem> cartItems;
   final String? error;
+
+  /// Código leído que no está en los productos del comercio. La pantalla abre la
+  /// ventana de alta rápida y después lo limpia.
+  final String? unknownBarcode;
   final bool isPrinting;
   final bool printSuccess;
   final List<Sale> dailySales;
@@ -18,6 +22,7 @@ class BillingState extends Equatable {
   const BillingState({
     this.cartItems = const [],
     this.error,
+    this.unknownBarcode,
     this.isPrinting = false,
     this.printSuccess = false,
     this.savedSaleId,
@@ -35,6 +40,8 @@ class BillingState extends Equatable {
     List<CartItem>? cartItems,
     String? error,
     bool clearError = false,
+    String? unknownBarcode,
+    bool clearUnknownBarcode = false,
     bool? isPrinting,
     bool? printSuccess,
     String? savedSaleId,
@@ -45,6 +52,8 @@ class BillingState extends Equatable {
     return BillingState(
       cartItems: cartItems ?? this.cartItems,
       error: clearError ? null : (error ?? this.error),
+      unknownBarcode:
+          clearUnknownBarcode ? null : (unknownBarcode ?? this.unknownBarcode),
       isPrinting: isPrinting ?? this.isPrinting,
       printSuccess: printSuccess ?? this.printSuccess,
       savedSaleId: savedSaleId ?? this.savedSaleId,
@@ -58,6 +67,7 @@ class BillingState extends Equatable {
   List<Object?> get props => [
         cartItems,
         error,
+        unknownBarcode,
         isPrinting,
         printSuccess,
         savedSaleId,

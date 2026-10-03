@@ -1,4 +1,5 @@
 import 'package:fpdart/fpdart.dart';
+import '../../../catalog/domain/barcode.dart';
 import '../../../sync/domain/sync_models.dart';
 import '../../../../core/data/hive_database.dart';
 import '../../../../core/error/failure.dart';
@@ -26,12 +27,15 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, Product>> getProductByBarcode(String barcode) async {
     try {
+      // Se comparan los códigos normalizados: un UPC de 12 dígitos y su EAN-13
+      // con 0 adelante son el mismo producto.
+      final wanted = normalizeBarcode(barcode) ?? barcode.trim();
       final box = HiveDatabase.productBox;
-      final product = box.values.firstWhere(
-        (element) => element.barcode == barcode,
-        orElse: () => throw Exception('Producto no encontrado'),
-      );
-      return Right(product);
+      for (final product in box.values) {
+        final stored = normalizeBarcode(product.barcode) ?? product.barcode.trim();
+        if (stored == wanted) return Right(product);
+      }
+      return Left(NotFoundFailure('Producto no encontrado: $barcode'));
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }

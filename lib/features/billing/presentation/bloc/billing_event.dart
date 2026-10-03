@@ -15,6 +15,11 @@ class ScanBarcodeEvent extends BillingEvent {
   List<Object?> get props => [barcode];
 }
 
+/// La pantalla ya atendió el código desconocido (guardó el producto o canceló).
+class ClearUnknownBarcodeEvent extends BillingEvent {
+  const ClearUnknownBarcodeEvent();
+}
+
 class AddProductToCartEvent extends BillingEvent {
   final Product product;
   const AddProductToCartEvent(this.product);

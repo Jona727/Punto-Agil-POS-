@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import '../../../../core/error/failure.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import '../../domain/entities/cart_item.dart';
@@ -35,6 +36,8 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     on<UpdateQuantityEvent>(_onUpdateQuantity);
     on<UpdateItemPriceEvent>(_onUpdateItemPrice);
     on<ClearCartEvent>(_onClearCart);
+    on<ClearUnknownBarcodeEvent>(
+        (event, emit) => emit(state.copyWith(clearUnknownBarcode: true)));
     on<SelectPaymentMethodEvent>(_onSelectPaymentMethod);
     on<ConfirmSaleEvent>(_onConfirmSale);
     on<PrintReceiptEvent>(_onPrintReceipt);
@@ -45,10 +48,23 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
 
   Future<void> _onScanBarcode(
       ScanBarcodeEvent event, Emitter<BillingState> emit) async {
-    final result = await getProductByBarcodeUseCase(event.barcode);
+    final barcode = event.barcode.trim();
+    if (barcode.isEmpty) return;
+    // Ya hay una ventana abierta pidiendo el precio de otro código (la cámara
+    // sigue leyendo el mismo código varias veces por segundo).
+    if (state.unknownBarcode != null) return;
+
+    final result = await getProductByBarcodeUseCase(barcode);
     result.fold(
-      (failure) =>
-          emit(state.copyWith(error: 'Producto no encontrado: ${event.barcode}')),
+      (failure) {
+        if (failure is NotFoundFailure) {
+          // No es un error: es un producto nuevo para este comercio.
+          emit(state.copyWith(unknownBarcode: barcode));
+        } else {
+          emit(state.copyWith(
+              error: 'No se pudo buscar el producto: ${failure.message}'));
+        }
+      },
       (product) {
         add(AddProductToCartEvent(product));
       },

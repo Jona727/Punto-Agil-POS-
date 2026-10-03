@@ -16,12 +16,14 @@ import 'package:cobra/features/product/domain/usecases/product_usecases.dart';
 
 class FakeProductRepository implements ProductRepository {
   final Map<String, Product> byBarcode;
-  FakeProductRepository(this.byBarcode);
+  FakeProductRepository(this.byBarcode, {this.fallaLaBase = false});
+  final bool fallaLaBase;
 
   @override
   Future<Either<Failure, Product>> getProductByBarcode(String barcode) async {
     final p = byBarcode[barcode];
-    return p == null ? const Left(CacheFailure('no existe')) : Right(p);
+    if (fallaLaBase) return const Left(CacheFailure('la base no responde'));
+    return p == null ? const Left(NotFoundFailure('no existe')) : Right(p);
   }
 
   @override
@@ -137,12 +139,71 @@ void main() {
       expect(bloc.state.cartItems.single.product, yerba);
     });
 
-    test('un código inexistente informa el error', () async {
+    test('un código que no está en los productos pide darlo de alta (no es un error)',
+        () async {
       bloc.add(const ScanBarcodeEvent('999'));
       await settle();
 
       expect(bloc.state.cartItems, isEmpty);
-      expect(bloc.state.error, contains('999'));
+      expect(bloc.state.unknownBarcode, '999');
+      expect(bloc.state.error, isNull);
+    });
+
+    test('un error real al buscar sí se informa', () async {
+      final bloc = BillingBloc(
+        getProductByBarcodeUseCase:
+            GetProductByBarcodeUseCase(FakeProductRepository({}, fallaLaBase: true)),
+        saveSaleUseCase: SaveSaleUseCase(saleRepo),
+        getDailySalesUseCase: GetDailySalesUseCase(saleRepo),
+      );
+      addTearDown(bloc.close);
+      bloc.add(const ScanBarcodeEvent('111'));
+      await settle();
+
+      expect(bloc.state.unknownBarcode, isNull);
+      expect(bloc.state.error, contains('la base no responde'));
+    });
+
+    test('el código se limpia de espacios y los vacíos se ignoran', () async {
+      bloc.add(const ScanBarcodeEvent('   '));
+      await settle();
+      expect(bloc.state.unknownBarcode, isNull);
+
+      bloc.add(const ScanBarcodeEvent('  999  '));
+      await settle();
+      expect(bloc.state.unknownBarcode, '999');
+    });
+
+    test('mientras se pide el precio de un código, los demás se ignoran '
+        '(la cámara lo lee varias veces por segundo)', () async {
+      bloc.add(const ScanBarcodeEvent('999'));
+      await settle();
+      bloc.add(const ScanBarcodeEvent('111')); // sí existe, pero hay una ventana abierta
+      bloc.add(const ScanBarcodeEvent('888'));
+      await settle();
+
+      expect(bloc.state.unknownBarcode, '999');
+      expect(bloc.state.cartItems, isEmpty);
+    });
+
+    test('al atender el código se libera y se puede volver a leer', () async {
+      bloc.add(const ScanBarcodeEvent('999'));
+      await settle();
+      bloc.add(const ClearUnknownBarcodeEvent());
+      await settle();
+      expect(bloc.state.unknownBarcode, isNull);
+
+      bloc.add(const ScanBarcodeEvent('999'));
+      await settle();
+      expect(bloc.state.unknownBarcode, '999');
+    });
+
+    test('un producto que sí existe se agrega sin abrir nada', () async {
+      bloc.add(const ScanBarcodeEvent('111'));
+      await settle();
+
+      expect(bloc.state.unknownBarcode, isNull);
+      expect(bloc.state.cartItems.single.product, yerba);
     });
   });
 

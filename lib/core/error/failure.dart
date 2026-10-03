@@ -15,3 +15,8 @@ class CacheFailure extends Failure {
 class AuthFailure extends Failure {
   const AuthFailure(String message) : super(message);
 }
+
+/// Lo que se buscó no existe (distinto de un error al leer los datos).
+class NotFoundFailure extends Failure {
+  const NotFoundFailure(String message) : super(message);
+}

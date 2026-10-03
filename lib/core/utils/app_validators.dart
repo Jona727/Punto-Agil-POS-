@@ -49,4 +49,19 @@ class AppValidators {
     return (String? value) =>
         value == other() ? null : 'Las contraseñas no coinciden';
   }
+
+  /// Lee un precio escrito a mano; acepta coma o punto como separador decimal.
+  static double? parsePrice(String? value) {
+    if (value == null) return null;
+    return double.tryParse(value.trim().replaceAll(',', '.'));
+  }
+
+  /// Precio obligatorio y mayor a cero (para vender un producto).
+  static String? positivePrice(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Ingresá el precio';
+    final price = parsePrice(value);
+    if (price == null) return 'Ingresá un número válido';
+    if (price <= 0) return 'El precio debe ser mayor a 0';
+    return null;
+  }
 }

@@ -8,7 +8,9 @@ import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/cart_item.dart';
+import '../widgets/manual_barcode_dialog.dart';
 import '../widgets/manual_catalog_sheet.dart';
+import '../widgets/unknown_barcode_handler.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -84,42 +86,45 @@ class _HomePageState extends State<HomePage> {
             );
           }
         },
-        child: Stack(
-          children: [
-            // SCANNER VIEW (TOP 50%)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: MediaQuery.of(context).size.height * 0.4,
-              child: _buildScannerSection(),
-            ),
+        child: UnknownBarcodeHandler(
+          child: Stack(
+            children: [
+              // SCANNER VIEW (TOP 50%)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: MediaQuery.of(context).size.height * 0.4,
+                child: _buildScannerSection(),
+              ),
 
-            // BOTTOM PANEL (BOTTOM 50% + OVERLAP)
-            Positioned(
-              top: (MediaQuery.of(context).size.height * 0.4) - 24, // overlap
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: _buildBottomPanel(),
-            ),
-          ],
+              // BOTTOM PANEL (BOTTOM 50% + OVERLAP)
+              Positioned(
+                top: (MediaQuery.of(context).size.height * 0.4) - 24, // overlap
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _buildBottomPanel(),
+              ),
+            ],
+          ),
         ),
       ),
-      bottomSheet:
-          BlocBuilder<BillingBloc, BillingState>(builder: (context, state) {
-        return PrimaryButton(
-          onPressed: state.cartItems.isEmpty
-              ? null
-              : () async {
-                  _scannerController.stop();
-                  await context.push('/checkout');
-                  if (_isCameraOn && mounted) _scannerController.start();
-                },
-          icon: Icons.payment,
-          label: 'Revisar pedido',
-        );
-      }),
+      bottomSheet: BlocBuilder<BillingBloc, BillingState>(
+        builder: (context, state) {
+          return PrimaryButton(
+            onPressed: state.cartItems.isEmpty
+                ? null
+                : () async {
+                    _scannerController.stop();
+                    await context.push('/checkout');
+                    if (_isCameraOn && mounted) _scannerController.start();
+                  },
+            icon: Icons.payment,
+            label: 'Revisar pedido',
+          );
+        },
+      ),
     );
   }
 
@@ -129,10 +134,7 @@ class _HomePageState extends State<HomePage> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          MobileScanner(
-            controller: _scannerController,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _scannerController, onDetect: _onDetect),
           if (!_isCameraOn) _buildCameraOffState(),
 
           // Overlay Actions (Top Right)
@@ -151,6 +153,16 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 16),
                 _buildOverlayButton(
+                  icon: Icons.keyboard,
+                  onPressed: () async {
+                    final code = await showManualBarcodeDialog(context);
+                    if (code != null && mounted) {
+                      context.read<BillingBloc>().add(ScanBarcodeEvent(code));
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildOverlayButton(
                   icon: Icons.format_list_bulleted_add,
                   color: AppTheme.primaryColor,
                   onPressed: () {
@@ -159,7 +171,7 @@ class _HomePageState extends State<HomePage> {
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
                       builder: (context) => const FractionallySizedBox(
-                        heightFactor: 0.85, 
+                        heightFactor: 0.85,
                         child: ManualCatalogSheet(),
                       ),
                     );
@@ -168,8 +180,9 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 16),
                 if (_isCameraOn)
                   _buildOverlayButton(
-                    icon:
-                        _isFlashOn ? Icons.flashlight_off : Icons.flashlight_on,
+                    icon: _isFlashOn
+                        ? Icons.flashlight_off
+                        : Icons.flashlight_on,
                     onPressed: () {
                       setState(() => _isFlashOn = !_isFlashOn);
                       _scannerController.toggleTorch();
@@ -234,14 +247,20 @@ class _HomePageState extends State<HomePage> {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child:
-                const Icon(Icons.videocam_off, color: Colors.white, size: 32),
+            child: const Icon(
+              Icons.videocam_off,
+              color: Colors.white,
+              size: 32,
+            ),
           ),
           const SizedBox(height: 16),
           const Text(
             'La cámara está apagada',
             style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 8),
           const Padding(
@@ -258,24 +277,30 @@ class _HomePageState extends State<HomePage> {
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
+                borderRadius: BorderRadius.circular(20),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             icon: const Icon(Icons.videocam),
-            label: const Text('Encender cámara',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            label: const Text(
+              'Encender cámara',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             onPressed: () {
               setState(() => _isCameraOn = true);
               _scannerController.start();
             },
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildOverlayButton(
-      {required IconData icon, required VoidCallback onPressed, Color? color}) {
+  Widget _buildOverlayButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    Color? color,
+  }) {
     return Container(
       width: 44,
       height: 44,
@@ -300,19 +325,23 @@ class _HomePageState extends State<HomePage> {
         height: 32,
         decoration: BoxDecoration(
           border: Border(
-            top: (alignment == Alignment.topLeft ||
+            top:
+                (alignment == Alignment.topLeft ||
                     alignment == Alignment.topRight)
                 ? const BorderSide(color: Colors.greenAccent, width: 4)
                 : BorderSide.none,
-            bottom: (alignment == Alignment.bottomLeft ||
+            bottom:
+                (alignment == Alignment.bottomLeft ||
                     alignment == Alignment.bottomRight)
                 ? const BorderSide(color: Colors.greenAccent, width: 4)
                 : BorderSide.none,
-            left: (alignment == Alignment.topLeft ||
+            left:
+                (alignment == Alignment.topLeft ||
                     alignment == Alignment.bottomLeft)
                 ? const BorderSide(color: Colors.greenAccent, width: 4)
                 : BorderSide.none,
-            right: (alignment == Alignment.topRight ||
+            right:
+                (alignment == Alignment.topRight ||
                     alignment == Alignment.bottomRight)
                 ? const BorderSide(color: Colors.greenAccent, width: 4)
                 : BorderSide.none,
@@ -329,7 +358,10 @@ class _HomePageState extends State<HomePage> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: const [
           BoxShadow(
-              color: Colors.black26, blurRadius: 15, offset: Offset(0, -5))
+            color: Colors.black26,
+            blurRadius: 15,
+            offset: Offset(0, -5),
+          ),
         ],
       ),
       child: Column(
@@ -348,40 +380,56 @@ class _HomePageState extends State<HomePage> {
           // Header
           BlocBuilder<BillingBloc, BillingState>(
             builder: (context, state) {
-              final totalItems =
-                  state.cartItems.fold<int>(0, (sum, i) => sum + i.quantity);
+              final totalItems = state.cartItems.fold<int>(
+                0,
+                (sum, i) => sum + i.quantity,
+              );
               return Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Productos escaneados',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.w600)),
-                        Text('$totalItems items total',
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.grey)),
+                        const Text(
+                          'Productos escaneados',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '$totalItems items total',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
                       ],
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('TOTAL',
-                            style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                                letterSpacing: 1.2)),
+                        const Text(
+                          'TOTAL',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                         Text(
                           '\$${state.totalAmount.toStringAsFixed(2)}',
                           style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: Theme.of(context).primaryColor),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: Theme.of(context).primaryColor,
+                          ),
                         ),
                       ],
                     ),
@@ -394,27 +442,33 @@ class _HomePageState extends State<HomePage> {
 
           // List View
           Expanded(
-            child: Stack(children: [
-              BlocBuilder<BillingBloc, BillingState>(
-                builder: (context, state) {
-                  if (state.cartItems.isEmpty) {
-                    return _buildEmptyCart();
-                  }
+            child: Stack(
+              children: [
+                BlocBuilder<BillingBloc, BillingState>(
+                  builder: (context, state) {
+                    if (state.cartItems.isEmpty) {
+                      return _buildEmptyCart();
+                    }
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.only(
-                        left: 15, right: 15, top: 16, bottom: 100),
-                    itemCount: state.cartItems.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final item = state.cartItems[index];
-                      return _buildCartItemCard(context, item);
-                    },
-                  );
-                },
-              ),
-            ]),
+                    return ListView.separated(
+                      padding: const EdgeInsets.only(
+                        left: 15,
+                        right: 15,
+                        top: 16,
+                        bottom: 100,
+                      ),
+                      itemCount: state.cartItems.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final item = state.cartItems[index];
+                        return _buildCartItemCard(context, item);
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -434,12 +488,17 @@ class _HomePageState extends State<HomePage> {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child:
-                Icon(Icons.shopping_basket, size: 40, color: Colors.grey[300]),
+            child: Icon(
+              Icons.shopping_basket,
+              size: 40,
+              color: Colors.grey[300],
+            ),
           ),
           const SizedBox(height: 16),
-          const Text('La lista está vacía',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const Text(
+            'La lista está vacía',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
           const SizedBox(height: 8),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 40),
@@ -454,17 +513,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCartItemCard(
-    BuildContext context,
-    CartItem item,
-  ) {
+  Widget _buildCartItemCard(BuildContext context, CartItem item) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
       padding: const EdgeInsets.all(16),
@@ -479,7 +535,9 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   item.product.name,
                   style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 14),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -495,12 +553,17 @@ class _HomePageState extends State<HomePage> {
                         Text(
                           '\$${item.product.price.toStringAsFixed(2)}',
                           style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: Colors.grey[600]),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(Icons.edit, size: 14, color: AppTheme.primaryColor),
+                        Icon(
+                          Icons.edit,
+                          size: 14,
+                          color: AppTheme.primaryColor,
+                        ),
                       ],
                     ),
                   ),
@@ -518,17 +581,19 @@ class _HomePageState extends State<HomePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _circularIconButton(
-                    icon: Icons.remove,
-                    onPressed: () {
-                      if (item.quantity > 1) {
-                        context.read<BillingBloc>().add(UpdateQuantityEvent(
-                            item.product.id, item.quantity - 1));
-                      } else {
-                        context
-                            .read<BillingBloc>()
-                            .add(RemoveProductFromCartEvent(item.product.id));
-                      }
-                    }),
+                  icon: Icons.remove,
+                  onPressed: () {
+                    if (item.quantity > 1) {
+                      context.read<BillingBloc>().add(
+                        UpdateQuantityEvent(item.product.id, item.quantity - 1),
+                      );
+                    } else {
+                      context.read<BillingBloc>().add(
+                        RemoveProductFromCartEvent(item.product.id),
+                      );
+                    }
+                  },
+                ),
                 SizedBox(
                   width: 32,
                   child: Text(
@@ -538,11 +603,13 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 _circularIconButton(
-                    icon: Icons.add,
-                    onPressed: () {
-                      context.read<BillingBloc>().add(UpdateQuantityEvent(
-                          item.product.id, item.quantity + 1));
-                    }),
+                  icon: Icons.add,
+                  onPressed: () {
+                    context.read<BillingBloc>().add(
+                      UpdateQuantityEvent(item.product.id, item.quantity + 1),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -551,8 +618,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _circularIconButton(
-      {required IconData icon, required VoidCallback onPressed}) {
+  Widget _circularIconButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
     return InkWell(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(8),
@@ -567,7 +636,7 @@ class _HomePageState extends State<HomePage> {
     final TextEditingController priceController = TextEditingController(
       text: item.product.price.toStringAsFixed(2),
     );
-    
+
     showDialog(
       context: context,
       builder: (context) {
@@ -585,17 +654,21 @@ class _HomePageState extends State<HomePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(color: Colors.grey),
+              ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor),
+                backgroundColor: AppTheme.primaryColor,
+              ),
               onPressed: () {
                 final newPrice = double.tryParse(priceController.text.trim());
                 if (newPrice != null && newPrice >= 0) {
                   context.read<BillingBloc>().add(
-                        UpdateItemPriceEvent(item.product.id, newPrice),
-                      );
+                    UpdateItemPriceEvent(item.product.id, newPrice),
+                  );
                   Navigator.pop(context);
                 }
               },
