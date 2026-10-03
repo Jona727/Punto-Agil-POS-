@@ -118,7 +118,8 @@ language plpgsql security definer
 set search_path = ''
 as $$
 begin
-  insert into public.businesses (owner_id) values (new.id);
+  insert into public.businesses (owner_id) values (new.id)
+  on conflict (owner_id) do nothing;
   return new;
 end;
 $$;

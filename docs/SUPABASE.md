@@ -14,8 +14,12 @@ y respaldo en la nube hay que crear un proyecto y pasarle a la app dos datos.
 1. En el menú izquierdo: **SQL Editor** → **New query**.
 2. Copiá todo el contenido de `supabase/migrations/001_esquema_inicial.sql`,
    pegalo y tocá **Run**. Debe decir *Success*.
+   Después ejecutá igual `002_asegurar_comercio.sql` y `003_reparar_seguridad.sql`
+   (la 003 se puede repetir sin problema; si el texto se cortó al copiar, la
+   003 completa lo que faltó).
 3. Verificá en **Table Editor** que existan `businesses`, `products`, `sales`
-   y `sale_items`.
+   y `sale_items`, y con esta consulta que haya **5 políticas**:
+   `select tablename, policyname from pg_policies where schemaname='public';`
 
 Esto crea además las reglas de seguridad (RLS): cada usuario solo puede ver y
 modificar los datos de **su** comercio. El comercio se crea solo cuando alguien
