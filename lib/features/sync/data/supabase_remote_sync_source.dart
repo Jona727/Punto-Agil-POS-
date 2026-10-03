@@ -62,10 +62,11 @@ class SupabaseRemoteSyncSource implements RemoteSyncSource {
     final uid = _currentUserId();
     if (uid == null) throw const SyncRetryableException('Sin sesión iniciada');
     if (_businessId != null && _businessOwner == uid) return _businessId!;
-    final row = await _call(() =>
-        _client.from('businesses').select('id').eq('owner_id', uid).single());
+    // El servidor crea el comercio si todavía no existe (idempotente), así no
+    // depende de que el disparador de registro haya funcionado.
+    final id = await _call(() => _client.rpc('ensure_my_business'));
     _businessOwner = uid;
-    return _businessId = row['id'] as String;
+    return _businessId = id as String;
   }
 
   @override
