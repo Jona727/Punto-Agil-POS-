@@ -8,7 +8,9 @@ import '../../../../core/utils/printer_helper.dart';
 import '../../../../core/utils/bluetooth_printer_helper.dart';
 import '../../../../core/data/hive_database.dart';
 import '../../domain/usecases/sale_usecases.dart';
+import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/sale.dart';
+import '../../domain/entities/sales_summary.dart';
 import '../../domain/entities/sale_item.dart';
 import 'package:uuid/uuid.dart';
 
@@ -33,6 +35,8 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     on<UpdateQuantityEvent>(_onUpdateQuantity);
     on<UpdateItemPriceEvent>(_onUpdateItemPrice);
     on<ClearCartEvent>(_onClearCart);
+    on<SelectPaymentMethodEvent>(_onSelectPaymentMethod);
+    on<ConfirmSaleEvent>(_onConfirmSale);
     on<PrintReceiptEvent>(_onPrintReceipt);
     on<PrintZReportEvent>(_onPrintZReport);
     on<LoadDailySalesEvent>(_onLoadDailySales);
@@ -110,37 +114,56 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     emit(const BillingState());
   }
 
+  void _onSelectPaymentMethod(
+      SelectPaymentMethodEvent event, Emitter<BillingState> emit) {
+    // Una vez registrada la venta, el medio de pago ya no se cambia.
+    if (state.isSaleRegistered) return;
+    emit(state.copyWith(paymentMethod: event.method));
+  }
+
+  Future<void> _onConfirmSale(
+      ConfirmSaleEvent event, Emitter<BillingState> emit) async {
+    if (state.cartItems.isEmpty) return;
+    await _ensureSaleSaved(emit);
+  }
+
+  /// Guarda la venta del carrito una sola vez. Devuelve false si no se pudo.
+  Future<bool> _ensureSaleSaved(Emitter<BillingState> emit) async {
+    if (state.isSaleRegistered) return true;
+
+    final sale = Sale(
+      id: const Uuid().v4(),
+      date: DateTime.now(),
+      total: state.totalAmount,
+      paymentMethod: state.paymentMethod,
+      items: state.cartItems
+          .map((item) => SaleItem(
+                productId: item.product.id,
+                name: item.product.name,
+                barcode: item.product.barcode,
+                unitPrice: item.product.price,
+                quantity: item.quantity,
+              ))
+          .toList(),
+    );
+    final saved = await saveSaleUseCase(sale);
+    if (saved.isLeft()) {
+      emit(state.copyWith(
+          error: 'No se pudo guardar la venta', clearError: false));
+      emit(state.copyWith(clearError: true));
+      return false;
+    }
+    emit(state.copyWith(savedSaleId: sale.id));
+    return true;
+  }
+
   Future<void> _onPrintReceipt(
       PrintReceiptEvent event, Emitter<BillingState> emit) async {
     if (state.cartItems.isEmpty) return;
 
     // La venta se registra primero y una sola vez: si la impresora falla,
     // la venta no se pierde y al reintentar no se duplica.
-    if (state.savedSaleId == null) {
-      final sale = Sale(
-        id: const Uuid().v4(),
-        date: DateTime.now(),
-        total: state.totalAmount,
-        items: state.cartItems
-            .map((item) => SaleItem(
-                  productId: item.product.id,
-                  name: item.product.name,
-                  barcode: item.product.barcode,
-                  unitPrice: item.product.price,
-                  quantity: item.quantity,
-                ))
-            .toList(),
-      );
-      final saved = await saveSaleUseCase(sale);
-      final failed = saved.isLeft();
-      if (failed) {
-        emit(state.copyWith(
-            error: 'No se pudo guardar la venta', clearError: false));
-        emit(state.copyWith(clearError: true));
-        return;
-      }
-      emit(state.copyWith(savedSaleId: sale.id));
-    }
+    if (!await _ensureSaleSaved(emit)) return;
 
     final wifiHelper = PrinterHelper();
     final btHelper = BluetoothPrinterHelper();
@@ -245,6 +268,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
             phone: event.phone,
             items: items,
             total: state.totalAmount,
+            paymentLabel: state.paymentMethod.label,
             footer: event.footer);
       } else {
         await wifiHelper.printReceipt(
@@ -254,6 +278,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
             phone: event.phone,
             items: items,
             total: state.totalAmount,
+            paymentLabel: state.paymentMethod.label,
             footer: event.footer);
       }
 
@@ -293,10 +318,8 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           return;
         }
 
-        double grandTotal = 0;
-        for (var sale in activeSales) {
-          grandTotal += sale.total;
-        }
+        final summary = SalesSummary.from(activeSales);
+        final grandTotal = summary.total;
 
         final wifiHelper = PrinterHelper();
         final btHelper = BluetoothPrinterHelper();
@@ -343,10 +366,18 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
           final items = [
             {
               'name': 'CANT. DE VENTAS',
-              'qty': activeSales.length,
+              'qty': summary.count,
               'price': 0.0,
               'total': 0.0,
             },
+            // Una línea por medio de pago: efectivo, Mercado Pago, etc.
+            for (final entry in summary.byMethod.entries)
+              {
+                'name': entry.key.label,
+                'qty': entry.value.count,
+                'price': 0.0,
+                'total': entry.value.total,
+              },
             {
               'name': 'TOTAL VENTAS',
               'qty': 1,

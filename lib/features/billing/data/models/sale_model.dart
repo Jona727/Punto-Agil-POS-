@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/sale.dart';
 import 'sale_item_model.dart';
 
@@ -21,12 +22,17 @@ class SaleModel extends HiveObject {
   @HiveField(4)
   final List<SaleItemModel> items;
 
+  /// Código del medio de pago (ver [PaymentMethod.code]).
+  @HiveField(5)
+  final String paymentMethod;
+
   SaleModel({
     required this.id,
     required this.date,
     required this.total,
     this.voided = false,
     this.items = const [],
+    this.paymentMethod = 'cash',
   });
 
   factory SaleModel.fromEntity(Sale sale) {
@@ -36,6 +42,7 @@ class SaleModel extends HiveObject {
       total: sale.total,
       voided: sale.voided,
       items: sale.items.map(SaleItemModel.fromEntity).toList(),
+      paymentMethod: sale.paymentMethod.code,
     );
   }
 
@@ -46,6 +53,7 @@ class SaleModel extends HiveObject {
       total: total,
       voided: voided,
       items: items.map((i) => i.toEntity()).toList(),
+      paymentMethod: PaymentMethod.fromCode(paymentMethod),
     );
   }
 }

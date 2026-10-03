@@ -64,6 +64,7 @@ class BluetoothPrinterHelper {
     required List<Map<String, dynamic>> items,
     required double total,
     required String footer,
+    String paymentLabel = '',
   }) async {
     if (!isConnected) return;
 
@@ -120,6 +121,12 @@ class BluetoothPrinterHelper {
 
     bytes += '--------------------------------'.codeUnits;
     bytes += EscPos.lineFeed;
+
+    if (paymentLabel.isNotEmpty) {
+      bytes += EscPos.alignLeft;
+      bytes += 'Pago: $paymentLabel'.codeUnits;
+      bytes += EscPos.lineFeed;
+    }
 
     bytes += EscPos.alignRight;
     bytes += EscPos.boldOn;

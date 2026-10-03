@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:cobra/features/billing/domain/entities/payment_method.dart';
 import 'package:cobra/features/billing/domain/entities/sale.dart';
 import 'package:cobra/features/billing/domain/entities/sale_item.dart';
 import 'package:cobra/features/product/domain/entities/product.dart';
@@ -115,6 +116,33 @@ void main() {
         'voided': false,
       });
       expect(back.items, isEmpty);
+    });
+  });
+
+  group('medio de pago en la nube', () {
+    test('viaja como código y vuelve igual', () {
+      for (final method in PaymentMethod.values) {
+        final sale = Sale(
+            id: 's', date: DateTime.utc(2026, 1, 1), total: 1, paymentMethod: method);
+        final row = saleToRow(sale, 'biz');
+        expect(row['payment_method'], method.code);
+        expect(rowToSale(row).paymentMethod, method);
+      }
+    });
+
+    test('filas sin el campo (ventas viejas) o con un valor raro son efectivo',
+        () {
+      final base = {
+        'id': 's',
+        'sold_at': '2026-01-01T00:00:00Z',
+        'total': 1,
+        'voided': false,
+      };
+      expect(rowToSale(base).paymentMethod, PaymentMethod.cash);
+      expect(rowToSale({...base, 'payment_method': null}).paymentMethod,
+          PaymentMethod.cash);
+      expect(rowToSale({...base, 'payment_method': 'otra_cosa'}).paymentMethod,
+          PaymentMethod.cash);
     });
   });
 }

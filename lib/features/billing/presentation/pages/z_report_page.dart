@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../domain/entities/sales_summary.dart';
 import '../bloc/billing_bloc.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 
@@ -39,7 +40,8 @@ class _ZReportPageState extends State<ZReportPage> {
           }
 
           final activeSales = state.dailySales.where((s) => !s.voided).toList();
-          final totalSales = activeSales.fold<double>(0, (sum, s) => sum + s.total);
+          final summary = SalesSummary.from(state.dailySales);
+          final totalSales = summary.total;
 
           return Column(
             children: [
@@ -71,6 +73,32 @@ class _ZReportPageState extends State<ZReportPage> {
                   ),
                 ),
               ),
+              if (summary.byMethod.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Column(
+                    children: [
+                      for (final entry in summary.byMethod.entries)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 3),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${entry.key.label} (${entry.value.count})',
+                                style: TextStyle(color: Colors.grey[700]),
+                              ),
+                              Text(
+                                '\$${entry.value.total.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -90,7 +118,7 @@ class _ZReportPageState extends State<ZReportPage> {
                           color: sale.voided ? Colors.grey : Colors.black87,
                         ),
                       ),
-                      subtitle: Text(time),
+                      subtitle: Text('$time · ${sale.paymentMethod.label}'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

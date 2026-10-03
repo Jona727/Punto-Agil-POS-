@@ -23,13 +23,14 @@ class SaleModelAdapter extends TypeAdapter<SaleModel> {
       // Ventas guardadas antes de esta versión no tienen estos campos.
       voided: fields[3] as bool? ?? false,
       items: (fields[4] as List?)?.cast<SaleItemModel>() ?? const [],
+      paymentMethod: fields[5] as String? ?? 'cash',
     );
   }
 
   @override
   void write(BinaryWriter writer, SaleModel obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -39,7 +40,9 @@ class SaleModelAdapter extends TypeAdapter<SaleModel> {
       ..writeByte(3)
       ..write(obj.voided)
       ..writeByte(4)
-      ..write(obj.items);
+      ..write(obj.items)
+      ..writeByte(5)
+      ..write(obj.paymentMethod);
   }
 
   @override

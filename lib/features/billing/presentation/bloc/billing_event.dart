@@ -51,6 +51,20 @@ class UpdateItemPriceEvent extends BillingEvent {
 
 class ClearCartEvent extends BillingEvent {}
 
+/// El cajero elige cómo paga el cliente (solo antes de registrar la venta).
+class SelectPaymentMethodEvent extends BillingEvent {
+  final PaymentMethod method;
+  const SelectPaymentMethodEvent(this.method);
+
+  @override
+  List<Object?> get props => [method];
+}
+
+/// Registra la venta con el medio de pago elegido, sin imprimir.
+class ConfirmSaleEvent extends BillingEvent {
+  const ConfirmSaleEvent();
+}
+
 class PrintReceiptEvent extends BillingEvent {
   final String shopName;
   final String address1;

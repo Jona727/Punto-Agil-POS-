@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase/supabase.dart';
+import 'package:cobra/features/billing/domain/entities/payment_method.dart';
 import 'package:cobra/features/billing/domain/entities/sale.dart';
 import 'package:cobra/features/billing/domain/entities/sale_item.dart';
 import 'package:cobra/features/product/domain/entities/product.dart';
@@ -125,6 +126,22 @@ void main() {
     expect(back.total, 5800);
     expect(back.date.toUtc(), venta.date);
     expect(back.items, venta.items);
+  }, skip: skip);
+
+  test('ventas: el medio de pago viaja a la nube y vuelve', () async {
+    final remote = _remoteFor(_userA);
+    for (final method in PaymentMethod.values) {
+      await remote.upsertSale(Sale(
+        id: 'pago-${method.code}',
+        date: DateTime.utc(2026, 10, 3, 15),
+        total: 100,
+        paymentMethod: method,
+      ));
+    }
+    final back = {for (final s in await remote.fetchSales()) s.id: s};
+    for (final method in PaymentMethod.values) {
+      expect(back['pago-${method.code}']!.paymentMethod, method);
+    }
   }, skip: skip);
 
   test('paginación: trae todo aunque supere el tamaño de página', () async {

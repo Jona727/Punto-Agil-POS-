@@ -33,7 +33,7 @@ class SupabaseRemoteSyncSource implements RemoteSyncSource {
 
   /// SQLSTATE de datos inválidos (22), integridad (23) y permisos/RLS (42):
   /// reintentar el mismo dato no sirve. Todo lo demás se considera pasajero.
-  static final _rejectedCode = RegExp(r'^(22|23|42)');
+  static final _rejectedCode = RegExp(r'^(22|23|42|PGRST204)');
 
   Future<T> _call<T>(Future<T> Function() action) async {
     try {
@@ -54,6 +54,10 @@ class SupabaseRemoteSyncSource implements RemoteSyncSource {
   static String _rejectionMessage(PostgrestException e) {
     if (e.code == '23505') {
       return 'Ya existe otro producto con ese código de barras.';
+    }
+    if (e.code == 'PGRST204' || e.code == '42703') {
+      return 'Falta actualizar la base de datos de Supabase (ejecutar la '
+          'última migración de supabase/migrations).';
     }
     return 'El servidor rechazó el cambio (${e.code}).';
   }

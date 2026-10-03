@@ -66,6 +66,7 @@ class PrinterHelper {
     required List<Map<String, dynamic>> items, // Name, Qty, Price, Total
     required double total,
     required String footer,
+    String paymentLabel = '',
   }) async {
     if (!isConnected) return;
 
@@ -133,6 +134,12 @@ class PrinterHelper {
     bytes += EscPos.lineFeed;
 
     // Total (Align Right)
+    if (paymentLabel.isNotEmpty) {
+      bytes += EscPos.alignLeft;
+      bytes += _textToBytes('Pago: $paymentLabel');
+      bytes += EscPos.lineFeed;
+    }
+
     bytes += EscPos.alignRight;
     bytes += EscPos.boldOn;
     bytes += _textToBytes('TOTAL: $total');

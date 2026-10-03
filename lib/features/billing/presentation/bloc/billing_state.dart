@@ -12,15 +12,22 @@ class BillingState extends Equatable {
   /// si se reintenta imprimir).
   final String? savedSaleId;
 
+  /// Cómo va a pagar el cliente. Se fija al registrar la venta.
+  final PaymentMethod paymentMethod;
+
   const BillingState({
     this.cartItems = const [],
     this.error,
     this.isPrinting = false,
     this.printSuccess = false,
     this.savedSaleId,
+    this.paymentMethod = PaymentMethod.cash,
     this.dailySales = const [],
     this.isDailySalesLoading = false,
   });
+
+  /// La venta de este carrito ya quedó registrada (se puede imprimir o terminar).
+  bool get isSaleRegistered => savedSaleId != null;
 
   double get totalAmount => cartItems.fold(0, (sum, item) => sum + item.total);
 
@@ -31,6 +38,7 @@ class BillingState extends Equatable {
     bool? isPrinting,
     bool? printSuccess,
     String? savedSaleId,
+    PaymentMethod? paymentMethod,
     List<Sale>? dailySales,
     bool? isDailySalesLoading,
   }) {
@@ -40,6 +48,7 @@ class BillingState extends Equatable {
       isPrinting: isPrinting ?? this.isPrinting,
       printSuccess: printSuccess ?? this.printSuccess,
       savedSaleId: savedSaleId ?? this.savedSaleId,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
       dailySales: dailySales ?? this.dailySales,
       isDailySalesLoading: isDailySalesLoading ?? this.isDailySalesLoading,
     );
@@ -52,6 +61,7 @@ class BillingState extends Equatable {
         isPrinting,
         printSuccess,
         savedSaleId,
+        paymentMethod,
         dailySales,
         isDailySalesLoading,
       ];

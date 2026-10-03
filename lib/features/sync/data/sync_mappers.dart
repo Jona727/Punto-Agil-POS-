@@ -1,3 +1,4 @@
+import '../../billing/domain/entities/payment_method.dart';
 import '../../billing/domain/entities/sale.dart';
 import '../../billing/domain/entities/sale_item.dart';
 import '../../product/domain/entities/product.dart';
@@ -58,6 +59,7 @@ Map<String, dynamic> saleToRow(Sale s, String businessId) => {
       'sold_at': s.date.toUtc().toIso8601String(),
       'total': round2(s.total),
       'voided': s.voided,
+      'payment_method': s.paymentMethod.code,
     };
 
 List<Map<String, dynamic>> saleItemsToRows(Sale s, String businessId) => [
@@ -84,6 +86,7 @@ Sale rowToSale(Map<String, dynamic> row) {
     date: DateTime.parse(row['sold_at'] as String).toLocal(),
     total: _num(row['total']),
     voided: row['voided'] as bool? ?? false,
+    paymentMethod: PaymentMethod.fromCode(row['payment_method'] as String?),
     items: [
       for (final i in items)
         SaleItem(

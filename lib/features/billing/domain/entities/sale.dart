@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'payment_method.dart';
 import 'sale_item.dart';
 
 class Sale extends Equatable {
@@ -7,6 +8,7 @@ class Sale extends Equatable {
   final double total;
   final bool voided;
   final List<SaleItem> items;
+  final PaymentMethod paymentMethod;
 
   const Sale({
     required this.id,
@@ -14,6 +16,7 @@ class Sale extends Equatable {
     required this.total,
     this.voided = false,
     this.items = const [],
+    this.paymentMethod = PaymentMethod.cash,
   });
 
   Sale copyWith({bool? voided}) {
@@ -23,9 +26,10 @@ class Sale extends Equatable {
       total: total,
       voided: voided ?? this.voided,
       items: items,
+      paymentMethod: paymentMethod,
     );
   }
 
   @override
-  List<Object?> get props => [id, date, total, voided, items];
+  List<Object?> get props => [id, date, total, voided, items, paymentMethod];
 }

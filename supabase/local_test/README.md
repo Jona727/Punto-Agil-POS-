@@ -14,6 +14,7 @@ psql cobra_test -f supabase/local_test/setup.sql
 psql cobra_test -f supabase/migrations/001_esquema_inicial.sql
 psql cobra_test -f supabase/migrations/002_asegurar_comercio.sql
 psql cobra_test -f supabase/migrations/003_reparar_seguridad.sql   # idempotente
+psql cobra_test -f supabase/migrations/004_medio_de_pago.sql
 
 # Dos usuarios de prueba (el trigger les crea su comercio)
 psql cobra_test -c "insert into auth.users (id, email) values

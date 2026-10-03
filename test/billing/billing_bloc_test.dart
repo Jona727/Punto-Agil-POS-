@@ -5,6 +5,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hive/hive.dart';
 import 'package:cobra/core/error/failure.dart';
 import 'package:cobra/core/data/hive_database.dart';
+import 'package:cobra/features/billing/domain/entities/payment_method.dart';
 import 'package:cobra/features/billing/domain/entities/sale.dart';
 import 'package:cobra/features/billing/domain/repositories/sale_repository.dart';
 import 'package:cobra/features/billing/domain/usecases/sale_usecases.dart';
@@ -191,6 +192,18 @@ void main() {
       expect(saleRepo.saved.length, 1);
     });
 
+    test('imprimir después de registrar el cobro no duplica la venta', () async {
+      bloc.add(const AddProductToCartEvent(yerba));
+      bloc.add(const SelectPaymentMethodEvent(PaymentMethod.transfer));
+      bloc.add(const ConfirmSaleEvent());
+      await settle();
+      bloc.add(printEvent); // sin impresora: falla, pero la venta ya existe
+      await settle();
+
+      expect(saleRepo.saved.length, 1);
+      expect(saleRepo.saved.single.paymentMethod, PaymentMethod.transfer);
+    });
+
     test('con el carrito vacío no se registra nada', () async {
       bloc.add(printEvent);
       await settle();
@@ -242,6 +255,82 @@ void main() {
 
       expect(bloc.state.error, isNotNull);
       expect(bloc.state.isDailySalesLoading, isFalse);
+    });
+  });
+
+  group('medio de pago y registro del cobro', () {
+    test('por defecto se cobra en efectivo', () {
+      expect(bloc.state.paymentMethod, PaymentMethod.cash);
+    });
+
+    test('Registrar cobro guarda la venta con el medio elegido, sin imprimir',
+        () async {
+      bloc.add(const AddProductToCartEvent(yerba));
+      bloc.add(const SelectPaymentMethodEvent(PaymentMethod.mercadoPago));
+      bloc.add(const ConfirmSaleEvent());
+      await settle();
+
+      expect(saleRepo.saved.length, 1);
+      expect(saleRepo.saved.single.paymentMethod, PaymentMethod.mercadoPago);
+      expect(saleRepo.saved.single.total, 2500);
+      expect(bloc.state.isSaleRegistered, isTrue);
+      expect(bloc.state.printSuccess, isFalse, reason: 'no se imprimió nada');
+      expect(bloc.state.isPrinting, isFalse);
+    });
+
+    test('cada medio de pago queda guardado tal cual', () async {
+      for (final method in PaymentMethod.values) {
+        bloc.add(ClearCartEvent());
+        bloc.add(const AddProductToCartEvent(yerba));
+        bloc.add(SelectPaymentMethodEvent(method));
+        bloc.add(const ConfirmSaleEvent());
+        await settle();
+      }
+      expect(saleRepo.saved.map((s) => s.paymentMethod).toList(),
+          PaymentMethod.values);
+    });
+
+    test('registrar dos veces no duplica la venta', () async {
+      bloc.add(const AddProductToCartEvent(yerba));
+      bloc.add(const ConfirmSaleEvent());
+      await settle();
+      bloc.add(const ConfirmSaleEvent());
+      await settle();
+
+      expect(saleRepo.saved.length, 1);
+    });
+
+    test('con el carrito vacío no se registra nada', () async {
+      bloc.add(const ConfirmSaleEvent());
+      await settle();
+
+      expect(saleRepo.saved, isEmpty);
+      expect(bloc.state.isSaleRegistered, isFalse);
+    });
+
+    test('registrada la venta, el medio de pago ya no se puede cambiar',
+        () async {
+      bloc.add(const AddProductToCartEvent(yerba));
+      bloc.add(const SelectPaymentMethodEvent(PaymentMethod.cash));
+      bloc.add(const ConfirmSaleEvent());
+      await settle();
+      bloc.add(const SelectPaymentMethodEvent(PaymentMethod.card));
+      await settle();
+
+      expect(bloc.state.paymentMethod, PaymentMethod.cash);
+      expect(saleRepo.saved.single.paymentMethod, PaymentMethod.cash);
+    });
+
+    test('una venta nueva vuelve a empezar en efectivo', () async {
+      bloc.add(const AddProductToCartEvent(yerba));
+      bloc.add(const SelectPaymentMethodEvent(PaymentMethod.card));
+      bloc.add(const ConfirmSaleEvent());
+      await settle();
+      bloc.add(ClearCartEvent());
+      await settle();
+
+      expect(bloc.state.paymentMethod, PaymentMethod.cash);
+      expect(bloc.state.isSaleRegistered, isFalse);
     });
   });
 }
