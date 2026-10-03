@@ -1,5 +1,3 @@
--- Cobrá · catálogo de productos (bloque 1 de 5): 1 a 2000
--- Se puede ejecutar varias veces: los códigos que ya existen se saltean.
 insert into public.catalog_products (ean, name, brand, category, source) values
 ('7790040929609','Galletitas Surtido Seleccionadas Bagley 400 g','Bagley','Almacén','sepa'),
 ('7790895000454','Gaseosa Naranja Fanta 1,5 L','Fanta','Bebidas sin alcohol','sepa'),

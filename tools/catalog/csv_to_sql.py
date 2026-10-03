@@ -27,15 +27,14 @@ def build_chunks(rows, per_chunk):
             f"({quote(r['ean'])},{quote(r['name'])},{quote(r['brand'])},{quote(r['category'])},{quote(r['source'])})"
             for r in part
         )
+        # Sin comentarios a propósito: si al pegar se pierden los saltos de línea,
+        # un "-- comentario" dejaría toda la consulta comentada (error "end of input").
         chunks.append(
-            "-- Cobrá · catálogo de productos (bloque {n} de {total}): {a} a {b}\n"
-            "-- Se puede ejecutar varias veces: los códigos que ya existen se saltean.\n"
             "insert into public.catalog_products (ean, name, brand, category, source) values\n"
             "{values}\n"
-            "on conflict (ean) do nothing;\n".format(a=start + 1, b=start + len(part), values=values, n="{n}", total="{total}")
+            "on conflict (ean) do nothing;\n".format(values=values)
         )
-    total = len(chunks)
-    return [c.replace("{n}", str(i + 1)).replace("{total}", str(total)) for i, c in enumerate(chunks)]
+    return chunks
 
 
 def main():

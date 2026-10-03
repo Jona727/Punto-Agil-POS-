@@ -19,7 +19,8 @@ class Sql(unittest.TestCase):
         rows = [{"ean": str(i), "name": f"P{i}", "brand": "", "category": "", "source": "sepa"} for i in range(5)]
         chunks = c.build_chunks(rows, 2)
         self.assertEqual(len(chunks), 3)
-        self.assertIn("bloque 1 de 3", chunks[0])
+        self.assertNotIn("--", chunks[0], "sin comentarios: un '--' podría comentar todo si se pierden los saltos de línea")
+        self.assertTrue(chunks[0].startswith("insert into"))
         self.assertIn("on conflict (ean) do nothing", chunks[0])
         self.assertEqual(chunks[2].count("('"), 1)
 

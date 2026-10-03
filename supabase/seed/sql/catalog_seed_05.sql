@@ -1,5 +1,3 @@
--- Cobrá · catálogo de productos (bloque 5 de 5): 8001 a 10000
--- Se puede ejecutar varias veces: los códigos que ya existen se saltean.
 insert into public.catalog_products (ean, name, brand, category, source) values
 ('4005808555796','Protector Solar Factor 30 en Botella Nivea Sun Protect and Bronze 200 ml','Nivea','Perfumería y cuidado personal','sepa'),
 ('4005900328489','Desodorante Intense Control Clinical Femenino Stick Nivea 42 g','Nivea','Perfumería y cuidado personal','sepa'),

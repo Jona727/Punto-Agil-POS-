@@ -1,5 +1,3 @@
--- Cobrá · catálogo de productos (bloque 2 de 5): 2001 a 4000
--- Se puede ejecutar varias veces: los códigos que ya existen se saltean.
 insert into public.catalog_products (ean, name, brand, category, source) values
 ('7794000598447','Sopa Crema de Zapallo Light Knorr 33 g','Knorr','Almacén','sepa'),
 ('7797453971119','Alimento Gatitos Carne y Leche Whiskas 500 g','Whiskas','Mascotas','sepa'),

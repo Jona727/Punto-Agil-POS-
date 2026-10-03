@@ -1,5 +1,3 @@
--- Cobrá · catálogo de productos (bloque 3 de 5): 4001 a 6000
--- Se puede ejecutar varias veces: los códigos que ya existen se saltean.
 insert into public.catalog_products (ean, name, brand, category, source) values
 ('7791476005912','Barra Crocante de Arroz Egran 70 g','Egran','Almacén','sepa'),
 ('7506309845036','Shampoo Reparación Rejuvenecedora Pantene 400 ml','Pantene','Perfumería y cuidado personal','sepa'),

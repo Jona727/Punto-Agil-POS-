@@ -1,5 +1,3 @@
--- Cobrá · catálogo de productos (bloque 4 de 5): 6001 a 8000
--- Se puede ejecutar varias veces: los códigos que ya existen se saltean.
 insert into public.catalog_products (ean, name, brand, category, source) values
 ('7790314010200','Vino Tinto Malbec Kadabra 750 ml','Kadabra','Bebidas con alcohol','sepa'),
 ('7790895641701','Jugo Listo Naranja Hic 2 L','Hic','Bebidas sin alcohol','sepa'),
