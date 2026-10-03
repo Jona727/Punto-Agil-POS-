@@ -126,12 +126,15 @@ void main() {
 
       expect(service.state.value.offline, isTrue);
       expect(service.state.value.pending, 2);
+      expect(service.state.value.lastError, 'sin internet',
+          reason: 'el motivo real debe verse para poder diagnosticar');
       expect(remote.products, isEmpty);
 
       remote.offline = false;
       await service.sync();
 
       expect(service.state.value.offline, isFalse);
+      expect(service.state.value.lastError, isNull, reason: 'se limpia al funcionar');
       expect(service.state.value.pending, 0);
       expect(remote.products['p1'], yerba);
       expect(remote.sales['s1'], isNotNull);

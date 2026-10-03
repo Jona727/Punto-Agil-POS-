@@ -163,9 +163,13 @@ class SyncService implements SyncRecorder {
       } on SyncRejectedException catch (e) {
         await outbox.markFailed(op);
         error = e.message;
-      } catch (_) {
+      } catch (e) {
         // Sin conexión u otro fallo pasajero: se corta y se reintenta luego.
+        // Se guarda el motivo para mostrarlo: si no, no hay forma de saber
+        // por qué no sube.
         offline = true;
+        error = _describe(e);
+        debugPrint('Sync: no se pudo subir ${op.kind.name}:${op.id} -> $error');
         break;
       }
     }
@@ -175,8 +179,10 @@ class SyncService implements SyncRecorder {
         if (await _pull()) _changes.add(null);
         state.value = state.value
             .copyWith(lastSyncAt: DateTime.now(), clearError: error == null);
-      } catch (_) {
+      } catch (e) {
         offline = true;
+        error = _describe(e);
+        debugPrint('Sync: no se pudo bajar datos -> $error');
       }
     }
 
@@ -186,6 +192,9 @@ class SyncService implements SyncRecorder {
       clearError: error == null,
     );
   }
+
+  static String _describe(Object e) =>
+      e is SyncRetryableException ? e.message : '$e';
 
   bool _hasActivePending() =>
       outbox.pending().any((op) => op.attempts < maxAttempts);

@@ -602,10 +602,12 @@ class _SettingsPageState extends State<SettingsPage> {
           subtitle = st.lastError ?? 'Tocá para reintentar';
           icon = Icons.cloud_off_outlined;
         } else if (st.offline) {
-          title = 'Sin conexión';
-          subtitle = st.pending > 0
-              ? '${st.pending} cambio(s) se subirán al volver internet'
-              : 'Tus datos están guardados en este teléfono';
+          title = 'No se pudo sincronizar';
+          final detail = st.lastError == null ? '' : '\nMotivo: ${st.lastError}';
+          subtitle = (st.pending > 0
+                  ? '${st.pending} cambio(s) quedan en este teléfono y se reintentan solos'
+                  : 'Tus datos están guardados en este teléfono') +
+              detail;
           icon = Icons.cloud_off_outlined;
         } else if (st.pending > 0) {
           title = '${st.pending} cambio(s) por subir';
