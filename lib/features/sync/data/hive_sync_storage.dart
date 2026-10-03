@@ -90,6 +90,7 @@ class HiveLocalSyncStore implements LocalSyncStore {
       addressLine2: model.addressLine2,
       phoneNumber: model.phoneNumber,
       paymentAlias: model.paymentAlias,
+      paymentQr: model.paymentQr,
       footerText: model.footerText,
     );
   }

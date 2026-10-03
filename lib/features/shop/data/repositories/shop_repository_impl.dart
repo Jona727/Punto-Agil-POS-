@@ -22,9 +22,9 @@ class ShopRepositoryImpl implements ShopRepository {
         return Right(shop);
       } else {
         // Return default shop if not found
-        return const Right(Shop(
-            name: 'Mi Negocio',
-            footerText: '¡Gracias por su compra!'));
+        return const Right(
+          Shop(name: 'Mi Negocio', footerText: '¡Gracias por su compra!'),
+        );
       }
     } catch (e) {
       return Left(CacheFailure(e.toString()));

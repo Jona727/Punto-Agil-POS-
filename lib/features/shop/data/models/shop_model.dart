@@ -24,6 +24,10 @@ class ShopModel extends Shop {
   @HiveField(5)
   final String footerText;
 
+  @override
+  @HiveField(6)
+  final String paymentQr;
+
   const ShopModel({
     required this.name,
     required this.addressLine1,
@@ -31,14 +35,16 @@ class ShopModel extends Shop {
     required this.phoneNumber,
     required this.paymentAlias,
     required this.footerText,
+    this.paymentQr = '',
   }) : super(
-          name: name,
-          addressLine1: addressLine1,
-          addressLine2: addressLine2,
-          phoneNumber: phoneNumber,
-          paymentAlias: paymentAlias,
-          footerText: footerText,
-        );
+         name: name,
+         addressLine1: addressLine1,
+         addressLine2: addressLine2,
+         phoneNumber: phoneNumber,
+         paymentAlias: paymentAlias,
+         footerText: footerText,
+         paymentQr: paymentQr,
+       );
 
   factory ShopModel.fromEntity(Shop shop) {
     return ShopModel(
@@ -48,6 +54,7 @@ class ShopModel extends Shop {
       phoneNumber: shop.phoneNumber,
       paymentAlias: shop.paymentAlias,
       footerText: shop.footerText,
+      paymentQr: shop.paymentQr,
     );
   }
 

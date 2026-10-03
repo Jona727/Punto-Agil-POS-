@@ -14,7 +14,7 @@ class ManualCatalogSheet extends StatefulWidget {
 
 class _ManualCatalogSheetState extends State<ManualCatalogSheet> {
   final TextEditingController _searchController = TextEditingController();
-  
+
   @override
   void initState() {
     super.initState();
@@ -55,14 +55,17 @@ class _ManualCatalogSheetState extends State<ManualCatalogSheet> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
-          Text('Agregar producto manualmente',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800])),
+
+          Text(
+            'Agregar producto manualmente',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
           const SizedBox(height: 16),
-          
+
           // Search Bar
           TextField(
             controller: _searchController,
@@ -89,7 +92,7 @@ class _ManualCatalogSheetState extends State<ManualCatalogSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // List
           Expanded(
             child: BlocBuilder<ProductBloc, ProductState>(
@@ -98,21 +101,29 @@ class _ManualCatalogSheetState extends State<ManualCatalogSheet> {
                   return const Center(child: CircularProgressIndicator());
                 } else if (state.status == ProductStatus.error) {
                   return Center(child: Text(state.message ?? 'Error'));
-                } else if (state.status == ProductStatus.loaded || state.status == ProductStatus.success || state.products.isNotEmpty) {
+                } else if (state.status == ProductStatus.loaded ||
+                    state.status == ProductStatus.success ||
+                    state.products.isNotEmpty) {
                   final query = _searchController.text.toLowerCase();
                   final filteredProducts = state.products.where((p) {
-                    return p.name.toLowerCase().contains(query) || p.barcode.contains(query);
+                    return p.name.toLowerCase().contains(query) ||
+                        p.barcode.contains(query);
                   }).toList();
 
                   if (filteredProducts.isEmpty) {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.inventory_2_outlined,
-                            size: 48, color: Colors.grey[400]),
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 16),
-                        Text('No se encontraron productos',
-                            style: TextStyle(color: Colors.grey[600])),
+                        Text(
+                          'No se encontraron productos',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
                       ],
                     );
                   }
@@ -131,16 +142,20 @@ class _ManualCatalogSheetState extends State<ManualCatalogSheet> {
                           }
                           // Add to cart
                           if (context.mounted) {
-                            context
-                                .read<BillingBloc>()
-                                .add(AddProductToCartEvent(product));
+                            context.read<BillingBloc>().add(
+                              AddProductToCartEvent(product),
+                            );
                             // Show small feedback (not obtrusive)
                             ScaffoldMessenger.of(context).clearSnackBars();
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text('${product.name} agregado al carrito'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                            ));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '${product.name} agregado al carrito',
+                                ),
+                                duration: const Duration(seconds: 1),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
                           }
                         },
                         leading: Container(
@@ -150,22 +165,33 @@ class _ManualCatalogSheetState extends State<ManualCatalogSheet> {
                             color: AppTheme.primaryColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Icon(Icons.add_shopping_cart,
-                              color: AppTheme.primaryColor, size: 20),
+                          child: Icon(
+                            Icons.add_shopping_cart,
+                            color: AppTheme.primaryColor,
+                            size: 20,
+                          ),
                         ),
-                        title: Text(product.name,
-                            style: const TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: Text('Stock: ${product.stock}',
-                            style: TextStyle(
-                                color: product.stock > 0
-                                    ? Colors.grey[600]
-                                    : Colors.red[400],
-                                fontSize: 12)),
-                        trailing: Text('\$${product.price.toStringAsFixed(2)}',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryColor,
-                                fontSize: 16)),
+                        title: Text(
+                          product.name,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          'Stock: ${product.stock}',
+                          style: TextStyle(
+                            color: product.stock > 0
+                                ? Colors.grey[600]
+                                : Colors.red[400],
+                            fontSize: 12,
+                          ),
+                        ),
+                        trailing: Text(
+                          '\$${product.price.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor,
+                            fontSize: 16,
+                          ),
+                        ),
                       );
                     },
                   );

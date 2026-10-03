@@ -45,6 +45,8 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Cobrá lee el QR de cobro de una imagen que elijas de tu galería.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We need camera access to scan barcodes.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>

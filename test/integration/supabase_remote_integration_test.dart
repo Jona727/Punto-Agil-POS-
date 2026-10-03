@@ -73,6 +73,8 @@ void main() {
       addressLine2: 'Córdoba',
       phoneNumber: '+54 9 351 123',
       paymentAlias: 'pepe.mp',
+      paymentQr:
+          '00020101021143650016com.mercadolibre0201...5204000053030325802AR63041D3C',
       footerText: '¡Gracias!',
     );
     await remote.upsertShop(shop);

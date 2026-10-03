@@ -19,6 +19,7 @@ Map<String, dynamic> shopToRow(Shop shop) => {
       'address2': shop.addressLine2,
       'phone': shop.phoneNumber,
       'payment_alias': shop.paymentAlias,
+      'payment_qr': shop.paymentQr,
       'footer_text': shop.footerText,
     };
 
@@ -28,6 +29,7 @@ Shop rowToShop(Map<String, dynamic> row) => Shop(
       addressLine2: row['address2'] as String? ?? '',
       phoneNumber: row['phone'] as String? ?? '',
       paymentAlias: row['payment_alias'] as String? ?? '',
+      paymentQr: row['payment_qr'] as String? ?? '',
       footerText: row['footer_text'] as String? ?? '',
     );
 

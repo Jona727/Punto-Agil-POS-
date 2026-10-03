@@ -6,6 +6,10 @@ class Shop extends Equatable {
   final String addressLine2;
   final String phoneNumber;
   final String paymentAlias;
+
+  /// Contenido del QR de cobro del comercio (Mercado Pago o banco), leído de una
+  /// imagen. Vacío = todavía no cargó uno.
+  final String paymentQr;
   final String footerText;
 
   const Shop({
@@ -14,6 +18,7 @@ class Shop extends Equatable {
     this.addressLine2 = '',
     this.phoneNumber = '',
     this.paymentAlias = '',
+    this.paymentQr = '',
     this.footerText = '',
   });
 
@@ -23,6 +28,7 @@ class Shop extends Equatable {
     String? addressLine2,
     String? phoneNumber,
     String? paymentAlias,
+    String? paymentQr,
     String? footerText,
   }) {
     return Shop(
@@ -31,11 +37,19 @@ class Shop extends Equatable {
       addressLine2: addressLine2 ?? this.addressLine2,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       paymentAlias: paymentAlias ?? this.paymentAlias,
+      paymentQr: paymentQr ?? this.paymentQr,
       footerText: footerText ?? this.footerText,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [name, addressLine1, addressLine2, phoneNumber, paymentAlias, footerText];
+  List<Object?> get props => [
+    name,
+    addressLine1,
+    addressLine2,
+    phoneNumber,
+    paymentAlias,
+    paymentQr,
+    footerText,
+  ];
 }

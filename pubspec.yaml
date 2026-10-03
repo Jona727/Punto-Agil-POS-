@@ -42,6 +42,7 @@ dependencies:
   app_settings: ^7.0.0
   flutter_bluetooth_serial: ^0.4.0
   supabase_flutter: ^2.18.0
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:

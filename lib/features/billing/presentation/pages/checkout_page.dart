@@ -4,10 +4,10 @@ import 'package:cobra/core/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../../domain/entities/payment_method.dart';
+import '../widgets/payment_qr_panel.dart';
 import '../bloc/billing_bloc.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -86,15 +86,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
             return BlocBuilder<ShopBloc, ShopState>(
               builder: (context, shopState) {
                 String paymentAlias = '';
+                String paymentQr = '';
 
                 if (shopState is ShopLoaded) {
                   paymentAlias = shopState.shop.paymentAlias;
+                  paymentQr = shopState.shop.paymentQr;
                 }
-
-                // Build MercadoPago deep-link (offline-safe: URL is generated locally)
-                final mpUrl = paymentAlias.isNotEmpty
-                    ? 'https://link.mercadopago.com.ar/$paymentAlias'
-                    : '';
 
                 return Column(
                   children: [
@@ -223,8 +220,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 // El QR de Mercado Pago solo se muestra si paga con Mercado Pago
                                 if (billingState.paymentMethod ==
                                     PaymentMethod.mercadoPago)
-                                  _MercadoPagoQr(
-                                    url: mpUrl,
+                                  PaymentQrPanel(
+                                    qr: paymentQr,
                                     alias: paymentAlias,
                                     total: billingState.totalAmount,
                                   ),
@@ -468,61 +465,6 @@ class _PaymentMethodSelector extends StatelessWidget {
             selected: method == selected,
             onSelected: enabled ? (_) => onSelected(method) : null,
           ),
-      ],
-    );
-  }
-}
-
-/// QR fijo del comercio. No lleva el monto: se muestra grande para que el
-/// cajero se lo diga al cliente, que lo escribe en su app.
-class _MercadoPagoQr extends StatelessWidget {
-  final String url;
-  final String alias;
-  final double total;
-
-  const _MercadoPagoQr({
-    required this.url,
-    required this.alias,
-    required this.total,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (url.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.amber[50],
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: const Text(
-          'Falta tu alias de Mercado Pago. Cargalo en Ajustes → Datos del negocio '
-          'para mostrar el QR.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13),
-        ),
-      );
-    }
-    return Column(
-      children: [
-        Text(
-          'Cobrar \$${total.toStringAsFixed(2)}',
-          style: const TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          'El cliente escanea y escribe este monto en su app',
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(width: 180, height: 180, child: PrettyQrView.data(data: url)),
-        const SizedBox(height: 4),
-        Text(alias, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
       ],
     );
   }
